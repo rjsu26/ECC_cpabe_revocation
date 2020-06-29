@@ -7,7 +7,6 @@ make new
 sudo make install
 cd ..
 cd cpabe-0.11
-rm don.txt
 make new 
 sudo make install
 cd ..
