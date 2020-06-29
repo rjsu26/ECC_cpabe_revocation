@@ -399,7 +399,9 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     // DEBUG(__LINE__);
     *mpk = malloc(sizeof(bswabe_pub_t));
     *msk = malloc(sizeof(bswabe_msk_t));
-    mpz_init_set_ui((*mpk)->n, n);
+    // mpz_init_set_ui((*mpk)->n, n);
+    memcpy((*mpk)->n, n, sizeof(n));
+    
     unsigned char a_bin[32] = {
         0x00,
         0x00,
@@ -473,14 +475,18 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     unsigned char x_bin[32] = {0x79, 0xbe, 0x66, 0x7e, 0xf9, 0xdc, 0xbb, 0xac, 0x55, 0xa0, 0x62, 0x95, 0xce, 0x87, 0x0b, 0x07, 0x02, 0x9b, 0xfc, 0xdb, 0x2d, 0xce, 0x28, 0xd9, 0x59, 0xf2, 0x81, 0x5b, 0x16, 0xf8, 0x17, 0x98};
     unsigned char y_bin[32] = {0x48, 0x3a, 0xda, 0x77, 0x26, 0xa3, 0xc4, 0x65, 0x5d, 0xa4, 0xfb, 0xfc, 0x0e, 0x11, 0x08, 0xa8, 0xfd, 0x17, 0xb4, 0x48, 0xa6, 0x85, 0x54, 0x19, 0x9c, 0x47, 0xd0, 0x8f, 0xfb, 0x10, 0xd4, 0xb8};
     
-    memcpy((*mpk)->a, a_bin, sizeof(a_bin));
-    memcpy((*mpk)->b, b_bin, sizeof(b_bin));
-    memcpy((*mpk)->p, p_bin, sizeof(p_bin));
-    memcpy((*mpk)->order, order_bin, sizeof(order_bin));
-    memcpy((*mpk)->G_x, x_bin, sizeof(x_bin));
-    memcpy((*mpk)->G_y, y_bin, sizeof(y_bin));
-    
-    // DEBUG(__LINE__);
+    BN_bin2bn(a_bin, 32, (*mpk)->a);
+    BN_bin2bn(b_bin, 32, (*mpk)->b);
+    BN_bin2bn(p_bin, 32, (*mpk)->p);
+    // memcpy((*mpk)->p, p_bin, sizeof(p_bin));
+    BN_bin2bn(order_bin, 32, (*mpk)->order);
+    // memcpy((*mpk)->order, order_bin, sizeof(order_bin));
+    BN_bin2bn(x_bin, 32, (*mpk)->G_x);
+    // memcpy((*mpk)->G_x, x_bin, sizeof(x_bin));
+    BN_bin2bn(y_bin, 32, (*mpk)->G_y);
+
+// ====================== write new function to generate a random  BIGNUM with given BIGNUM limits======
+/*     
     mpz_t p;
     int flag =  mpz_init_set_str (p, "115792089237316195423570985008687907853269984665640564039457584007908834671661", 10);// string of decimal value of p-2 where p is the prime number for bitcoin curve
     assert(flag==0);
@@ -505,7 +511,7 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     mpz_add_ui((*msk)->k2, (*msk)->k2, 2);
     // mpz_out_str(stdout,10, (*msk)->k2); printf("\n");
 
-    
+ */    
 
     //     mpz_mul((*mpk)->N, (*msk)->p, (*msk)->q);
     //     mpz_t p_1;
