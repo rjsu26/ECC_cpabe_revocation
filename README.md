@@ -1,4 +1,7 @@
 ![C/C++ CI](https://github.com/rjsu26/ECC_cpabe_revocation/workflows/C/C++%20CI/badge.svg)
+[![GitHub contributors](https://img.shields.io/github/contributors/Naereen/StrapDown.js.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/contributors/)
+[![GitHub pull-requests](https://img.shields.io/github/issues-pr/Naereen/StrapDown.js.svg)](https://GitHub.com/Naereen/StrapDown.js/pull/)
+
 # ECC_cpabe_revocation
 <!-- ---------------------------------------------------- -->
 
@@ -14,6 +17,8 @@
 1. Make a new branch with your name as _firstname_lastname_ using the command : `git checkout -b <your_name>`. This command will also bring you to this branch after creating it. 
 2. Make the desired changes and add + commit the changes.  
 3. Make a pull request to the master branch of the main repo
+
+[Reference: working with git branches](https://thenewstack.io/dont-mess-with-the-master-working-with-branches-in-git-and-github/)
 
 ### Steps to Compile and Execute:
 1. Run `./compile.sh` 
