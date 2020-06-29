@@ -1,3 +1,4 @@
+![C/C++ CI](https://github.com/rjsu26/ECC_cpabe_revocation/workflows/C/C++%20CI/badge.svg)
 # ECC_cpabe_revocation
 ----------------------------------------------------
 
