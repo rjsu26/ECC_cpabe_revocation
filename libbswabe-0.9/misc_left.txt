@@ -1,0 +1,181 @@
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <glib.h>
+#include <pbc.h>
+
+#include "bswabe.h"
+#include "private.h"
+
+void
+serialize_uint32( GByteArray* b, uint32_t k )
+{
+	int i;
+	guint8 byte;
+
+	for( i = 3; i >= 0; i-- )
+	{
+		byte = (k & 0xff<<(i*8))>>(i*8);
+		g_byte_array_append(b, &byte, 1);
+	}
+}
+
+uint32_t
+unserialize_uint32( GByteArray* b, int* offset )
+{
+	int i;
+	uint32_t r;
+
+	r = 0;
+	for( i = 3; i >= 0; i-- )
+		r |= (b->data[(*offset)++])<<(i*8);
+
+	return r;
+}
+
+void
+serialize_element( GByteArray* b, element_t e )
+{
+	uint32_t len;
+	unsigned char* buf;
+
+	len = element_length_in_bytes(e);
+	serialize_uint32(b, len);
+
+	buf = (unsigned char*) malloc(len);
+	element_to_bytes(buf, e);
+	g_byte_array_append(b, buf, len);
+	free(buf);
+}
+
+void
+unserialize_element( GByteArray* b, int* offset, element_t e )
+{
+	uint32_t len;
+	unsigned char* buf;
+
+	len = unserialize_uint32(b, offset);
+
+	buf = (unsigned char*) malloc(len);
+	memcpy(buf, b->data + *offset, len);
+	*offset += len;
+
+	element_from_bytes(e, buf);
+	free(buf);
+}
+
+void
+serialize_string( GByteArray* b, char* s )
+{
+	g_byte_array_append(b, (unsigned char*) s, strlen(s) + 1);
+}
+
+char*
+unserialize_string( GByteArray* b, int* offset )
+{
+	GString* s;
+	char* r;
+	char c;
+
+	s = g_string_sized_new(32);
+	while( 1 )
+	{
+		c = b->data[(*offset)++];
+		if( c && c != EOF )
+			g_string_append_c(s, c);
+		else
+			break;
+	}
+
+	r = s->str;
+	g_string_free(s, 0);
+
+	return r;
+}
+
+GByteArray*
+bswabe_pub_serialize( bswabe_pub_t* pub )
+{
+	GByteArray* b;
+	int i,j;
+
+	b = g_byte_array_new();
+	serialize_string(b,  pub->pairing_desc);
+	serialize_element(b, pub->g1);
+	serialize_element(b, pub->h);
+	serialize_element(b, pub->Y);
+	for(i=0;i<3;i++)
+		for(j=0;j<3;j++)
+			serialize_element(b, pub->T[i][j]);
+
+	return b;
+}
+
+bswabe_pub_t*
+bswabe_pub_unserialize( GByteArray* b, int free )
+{
+	bswabe_pub_t* pub;
+	int offset,i,j;
+
+	pub = (bswabe_pub_t*) malloc(sizeof(bswabe_pub_t));
+	offset = 0;
+
+	pub->pairing_desc = unserialize_string(b, &offset);
+	pairing_init_set_buf(pub->p, pub->pairing_desc, strlen(pub->pairing_desc));
+
+	element_init_G1(pub->g1,           pub->p);
+	element_init_G1(pub->h,           pub->p);
+	element_init_G2(pub->Y,          pub->p);
+	for(i=0;i<3;i++)
+		for(j=0;j<3;j++)
+			element_init_GT(pub->T[i][j], pub->p);
+
+	unserialize_element(b, &offset, pub->g1);
+	unserialize_element(b, &offset, pub->h);
+	unserialize_element(b, &offset, pub->Y);
+	for(i=0;i<3;i++)
+		for(j=0;j<3;j++)
+			unserialize_element(b, &offset, pub->T[i][j]);
+
+	if( free )
+		g_byte_array_free(b, 1);
+
+	return pub;
+}
+
+GByteArray*
+bswabe_msk_serialize( bswabe_msk_t* msk )
+{
+	GByteArray* b;
+	int i,j;
+
+	b = g_byte_array_new();
+	serialize_element(b, msk->y);
+	for(i=0;i<3;i++)
+		for(j=0;j<3;j++)
+			serialize_element(b, msk->t[i][j]);
+
+	return b;
+}
+
+
+
+
+
+private.h part
+
+struct bswabe_pub_s
+{
+	char* pairing_desc;
+	pairing_t p;
+	element_t g1;           /* G_1 */
+	element_t h;           /* G_1 */
+	element_t Y;          /* G_2 */
+	element_t T[3][3]; /* G_T */
+};
+
+struct bswabe_msk_s
+{
+	element_t y;    /* Z_r */
+	element_t t[3][3]; /* G_2 */
+};

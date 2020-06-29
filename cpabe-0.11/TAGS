@@ -1,0 +1,278 @@
+
+dec.c,218
+char *usage usage12,179
+char *pub_file pub_file44,1698
+char *prv_file prv_file45,1718
+char *in_file in_file46,1738
+char *out_file out_file47,1757
+int keep 50,1833
+void parse_args(56,1933
+int main(119,3204
+
+setup.c,154
+#define DEBUG(13,198
+char *usage usage15,263
+char *pub_file pub_file32,924
+char *msk_file msk_file33,952
+void parse_args(35,984
+int main(68,1618
+
+original.c,164
+char* usage 11,166
+char* pub_file 28,946
+char* in_file 29,966
+char* out_file 30,986
+int   keep 31,1006
+char* policy 33,1027
+parse_args(36,1051
+main(92,2099
+
+common.c,341
+#define TYPE_A_PARAMS 18,329
+void init_aes(31,1028
+aes_128_cbc_encrypt(55,1528
+aes_128_cbc_decrypt(106,2823
+fopen_read_or_die(152,3905
+fopen_write_or_die(163,4038
+suck_file(174,4179
+suck_file_str(192,4425
+suck_stdin(208,4639
+void spit_file(224,4822
+void read_cpabe_file(236,5004
+void write_cpabe_file(270,5700
+void die(295,6295
+
+keygen.c,222
+char *usage usage14,224
+char *pub_file pub_file48,1772
+char *msk_file msk_file49,1792
+char **attrs attrs50,1812
+char *out_file out_file52,1831
+gint comp_string(54,1861
+int parse_args(59,1939
+int main(121,3041
+
+enc.c,326
+char *usage usage17,263
+char *pub_file pub_file34,1058
+char *msk_file msk_file35,1078
+char *in_file in_file36,1109
+char *out_file out_file37,1128
+int keep 38,1148
+char **attrs attrs39,1162
+char **policy policy41,1181
+char *verification_file verification_file42,1200
+int parse_args(44,1247
+int main(122,2864
+
+test-lang.c,11
+main(8,86
+
+cpabe.h,60
+#define NUM_ATTR_BITS 12,204
+#define CPABE_VERSION 27,660
+
+common.h,30
+#define CPABE_VERSION 29,746
+
+policy_lang.c,4985
+#define YYBISON 44,2037
+#define YYBISON_VERSION 47,2078
+#define YYSKELETON_NAME 50,2133
+#define YYPURE 53,2188
+#define YYPUSH 56,2227
+#define YYPULL 59,2266
+#   define YY_NULLPTR 112,3678
+#   define YY_NULLPTR 114,3716
+# undef YYERROR_VERBOSE120,3821
+# define YYERROR_VERBOSE 121,3845
+# define YYERROR_VERBOSE 123,3878
+# define YYDEBUG 129,3951
+# define YYTOKENTYPE137,4056
+  enum yytokentype138,4077
+    TAG 140,4100
+    INTLIT 141,4115
+    OR 142,4133
+    AND 143,4147
+    OF 144,4162
+    LEQ 145,4176
+    GEQ 146,4191
+union YYSTYPE153,4293
+typedef union YYSTYPE YYSTYPE;166,4495
+# define YYSTYPE_IS_TRIVIAL 167,4526
+# define YYSTYPE_IS_DECLARED 168,4556
+# undef short183,4752
+typedef YYTYPE_UINT8 yytype_uint8;187,4794
+typedef unsigned char yytype_uint8;189,4835
+typedef YYTYPE_INT8 yytype_int8;193,4898
+typedef signed char yytype_int8;195,4937
+typedef YYTYPE_UINT16 yytype_uint16;199,4999
+typedef unsigned short int yytype_uint16;201,5042
+typedef YYTYPE_INT16 yytype_int16;205,5112
+typedef short int yytype_int16;207,5153
+#  define YYSIZE_T 212,5232
+#  define YYSIZE_T 214,5287
+#  define YYSIZE_T 217,5396
+#  define YYSIZE_T 219,5429
+#define YYSIZE_MAXIMUM 223,5477
+#   define YY_(229,5647
+#  define YY_(233,5733
+#  define YY_ATTRIBUTE(241,5990
+#  define YY_ATTRIBUTE(243,6046
+# define YY_ATTRIBUTE_PURE 248,6129
+# define YY_ATTRIBUTE_UNUSED 252,6220
+#  define _Noreturn 258,6417
+#  define _Noreturn 260,6466
+# define YYUSE(266,6626
+# define YYUSE(268,6663
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN 273,6838
+# define YY_IGNORE_MAYBE_UNINITIALIZED_END 277,7048
+# define YY_INITIAL_VALUE(280,7134
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN283,7224
+# define YY_IGNORE_MAYBE_UNINITIALIZED_END284,7269
+# define YY_INITIAL_VALUE(287,7344
+#    define YYSTACK_ALLOC 298,7592
+#    define YYSTACK_ALLOC 302,7755
+#    define alloca 305,7875
+#    define YYSTACK_ALLOC 307,7911
+#      define EXIT_SUCCESS 312,8141
+#  define YYSTACK_FREE(321,8291
+#   define YYSTACK_ALLOC_MAXIMUM 327,8681
+#  define YYSTACK_ALLOC 330,8763
+#  define YYSTACK_FREE 331,8796
+#   define YYSTACK_ALLOC_MAXIMUM 333,8858
+#    define EXIT_SUCCESS 340,9155
+#   define YYMALLOC 344,9220
+#   define YYFREE 350,9393
+union yyalloc364,9789
+  yytype_int16 yyss_alloc;366,9805
+  YYSTYPE yyvs_alloc;367,9832
+# define YYSTACK_GAP_MAXIMUM 371,9933
+# define YYSTACK_BYTES(375,10081
+# define YYCOPY_NEEDED 379,10196
+# define YYSTACK_RELOCATE(386,10505
+#   define YYCOPY(404,11384
+#   define YYCOPY(407,11490
+#define YYFINAL 420,11959
+#define YYLAST 422,12019
+#define YYNTOKENS 425,12081
+#define YYNNTS 427,12144
+#define YYNRULES 429,12198
+#define YYNSTATES 431,12257
+#define YYUNDEFTOK 435,12396
+#define YYMAXUTOK 436,12418
+#define YYTRANSLATE(438,12443
+static const yytype_uint8 yytranslate[yytranslate443,12719
+static const yytype_uint8 yyrline[yyrline476,14786
+static const char *const yytname[yytname487,15171
+static const yytype_uint16 yytoknum[yytoknum498,15571
+#define YYPACT_NINF 505,15749
+#define yypact_value_is_default(507,15773
+#define YYTABLE_NINF 510,15843
+#define yytable_value_is_error(512,15868
+static const yytype_int8 yypact[yypact517,16010
+static const yytype_uint8 yydefact[yydefact529,16560
+static const yytype_int8 yypgoto[yypgoto539,16956
+static const yytype_int8 yydefgoto[yydefgoto545,17067
+static const yytype_uint8 yytable[yytable553,17353
+static const yytype_int8 yycheck[yycheck562,17733
+static const yytype_uint8 yystos[yystos573,18213
+static const yytype_uint8 yyr1[yyr1583,18647
+static const yytype_uint8 yyr2[yyr2591,18926
+#define yyerrok 599,19130
+#define yyclearin 600,19172
+#define YYEMPTY 601,19215
+#define YYEOF 602,19244
+#define YYACCEPT 604,19271
+#define YYABORT 605,19312
+#define YYERROR 606,19352
+#define YYRECOVERING(609,19394
+#define YYBACKUP(611,19435
+#define YYTERROR 629,20450
+#define YYERRCODE 630,20476
+#  define YYFPRINTF 639,20633
+# define YYDPRINTF(642,20670
+# define YY_LOCATION_PRINT(650,20966
+# define YY_SYMBOL_PRINT(654,21024
+yy_symbol_value_print 671,21825
+yy_symbol_print 690,22224
+yy_stack_print 705,22788
+# define YY_STACK_PRINT(716,23038
+yy_reduce_print 728,23485
+# define YY_REDUCE_PRINT(747,24093
+int yydebug;755,24383
+# define YYDPRINTF(757,24417
+# define YY_SYMBOL_PRINT(758,24442
+# define YY_STACK_PRINT(759,24497
+# define YY_REDUCE_PRINT(760,24534
+# define YYINITDEPTH 766,24668
+# define YYMAXDEPTH 777,25024
+#   define yystrlen 785,25143
+yystrlen 789,25229
+#   define yystpcpy 801,25455
+yystpcpy 806,25593
+yytnamerr 828,26241
+yysyntax_error 876,27403
+  enum { YYERROR_VERBOSE_ARGS_MAXIMUM 881,27600
+# define YYCASE_(952,30789
+# undef YYCASE_962,31340
+yydestruct 1008,32464
+int yychar;1024,32772
+YYSTYPE yylval;1027,32836
+int yynerrs;1029,32891
+yyparse 1037,32953
+#define YYPOPSTACK(1077,33963
+#  undef YYSTACK_RELOCATE1150,36281
+# define YYSYNTAX_ERROR 1446,44934
+# undef YYSYNTAX_ERROR1475,45881
+
+policy_lang.y,1103
+	uint64_t value;15,200
+	int bits;16,217
+sized_integer_t;18,262
+	int k;22,297
+	char* attr;23,358
+	GPtrArray* children;24,427
+cpabe_policy_t;26,508
+cpabe_policy_t* final_policy 28,525
+	char* str;46,1197
+	uint64_t nat;47,1209
+  sized_integer_t* sint;48,1224
+	cpabe_policy_t* tree;49,1249
+	GPtrArray* list;50,1272
+result:result67,1454
+number:number69,1493
+policy:policy72,1618
+arg_list:arg_list88,2669
+expint(97,2936
+flexint(116,3325
+policy_free(128,3466
+leaf_policy(143,3699
+kof2_policy(156,3896
+kof_policy(171,4191
+bit_marker(192,4701
+eq_policy(208,4964
+bit_marker_list(221,5235
+flexint_leader(243,5793
+cmp_policy(279,6488
+lt_policy(325,7891
+gt_policy(331,7988
+le_policy(337,8085
+ge_policy(344,8195
+char* cur_string 350,8289
+#define PEEK_CHAR 352,8312
+#define NEXT_CHAR 353,8370
+yylex(356,8433
+yyerror(435,9627
+#define POLICY_IS_OR(440,9697
+#define POLICY_IS_AND(441,9796
+merge_child(444,9896
+simplify(465,10274
+cmp_tidy(484,10704
+tidy(503,11125
+format_policy_postfix(516,11371
+actual_bits(546,11864
+parse_attribute(563,12165
+parse_policy_lang(623,13602
+
+policy_lang.h,0

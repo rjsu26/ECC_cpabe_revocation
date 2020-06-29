@@ -1,0 +1,127 @@
+
+core.c,594
+#define NDEBUG6,98
+#define DEBUG(18,261
+#define TYPE_A_PARAMS 21,327
+char last_error[last_error34,1059
+bswabe_error(37,1089
+void raise_error(42,1132
+void element_from_string(58,1397
+int isPrime(155,4184
+int powe(169,4340
+void concatenate(189,4781
+void take_Concatenate(238,5823
+unsigned long int generate_random(288,6617
+void compute_hash(297,6784
+void compute_hash2(332,7459
+int *delete_subarr(delete_subarr370,8210
+void bswabe_setup(397,8763
+bswabe_enc(643,16196
+bswabe_prv_t *bswabe_keygen(bswabe_keygen872,22333
+void bswabe_proxy(1155,29782
+int bswabe_dec(1183,30291
+
+misc.c,468
+void serialize_string(11,157
+unserialize_string(24,437
+bswabe_pub_serialize(54,841
+bswabe_pub_unserialize(89,1535
+bswabe_msk_serialize(129,2464
+bswabe_msk_unserialize(157,2976
+bswabe_prv_serialize(193,3621
+bswabe_prv_unserialize(208,3838
+bswabe_cph_serialize(230,4225
+bswabe_cph_unserialize(247,4543
+void bswabe_pub_free(267,5033
+void bswabe_msk_free(284,5290
+void bswabe_prv_free(301,5545
+void bswabe_policy_free(312,5679
+void bswabe_cph_free(331,5966
+
+private.h,1827
+struct bswabe_pub_s 5,72
+	mpz_t N;8,125
+	mpz_t Y;9,135
+	mpz_t R;10,145
+	mpz_t p_i[p_i11,155
+	mpz_t D_u;12,172
+	mpz_t n;13,196
+	mpz_t P_i[P_i14,279
+	unsigned char p[p15,296
+	unsigned char a[a16,336
+	unsigned char b[b17,391
+	unsigned char order[order18,434
+	unsigned char G_x[G_x19,485
+	unsigned char G_y[G_y20,530
+struct bswabe_msk_s 23,579
+	mpz_t k;26,619
+	mpz_t x;27,629
+	mpz_t p;28,639
+	mpz_t q;29,649
+	mpz_t n;30,659
+	mpz_t q_i[q_i31,669
+	mpz_t alpha;32,686
+	mpz_t k1;33,700
+	mpz_t k2;34,711
+struct bswabe_cph_s37,726
+	mpz_t Y_m;44,957
+	mpz_t R_m;45,969
+	mpz_t C_sigma;46,981
+	mpz_t C_m;47,997
+	mpz_t S_m;48,1009
+	mpz_t e_p;49,1021
+struct bswabe_prv_s52,1037
+	mpz_t k1;55,1060
+	mpz_t k2;56,1071
+	mpz_t e_a;57,1082
+struct bswabe_sig_s60,1098
+	element_t x;63,1121
+struct bswabe_verification_s66,1139
+	element_t y;69,1171
+	element_t g;70,1185
+	element_t g_y;71,1199
+	element_t g_xy;72,1215
+	char *y_s;y_s73,1232
+struct bswabe_signature_s76,1248
+	element_t sigma;79,1277
+struct bswabe_sigver_s82,1299
+	bswabe_verification_t *a;a85,1325
+	bswabe_sig_t *b;b86,1352
+struct bswabe_proxy_s89,1381
+	element_t Cuser;91,1405
+	element_t Cattr;92,1432
+	int on;93,1450
+	char *attr;attr98,1516
+	element_t d;99,1529
+	element_t dp;100,1554
+	int used;103,1628
+	element_t z;104,1639
+	element_t zp;105,1664
+} bswabe_prv_comp_t;106,1689
+	int deg;110,1728
+	element_t *coef;coef112,1786
+} bswabe_polynomial_t;113,1834
+	int k;118,1893
+	char *attr;attr119,1944
+	element_t c;120,2007
+	element_t cp;121,2050
+	GPtrArray *children;children122,2094
+	bswabe_polynomial_t *q;q125,2209
+	int satisfiable;128,2270
+	int min_leaves;129,2288
+	int attri;130,2305
+	GArray *satl;satl131,2317
+} bswabe_policy_t;132,2332
+	char *attr;attr136,2369
+} bswabe_enc_comp_t;137,2382
+
+bswabe.h,481
+typedef struct bswabe_pub_s bswabe_pub_t;13,186
+typedef struct bswabe_msk_s bswabe_msk_t;18,258
+typedef struct bswabe_proxy_s bswabe_proxy_t;22,321
+typedef struct bswabe_prv_s bswabe_prv_t;26,390
+typedef struct bswabe_cph_s bswabe_cph_t;34,682
+typedef struct bswabe_verification_s bswabe_verification_t;36,725
+typedef struct bswabe_sig_s bswabe_sig_t;38,786
+typedef struct bswabe_signature_s bswabe_signature_t;40,829
+typedef struct bswabe_sigver_s bswabe_sigver_t;42,884
