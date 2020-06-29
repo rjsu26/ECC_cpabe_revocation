@@ -3,7 +3,8 @@
 ----------------------------------------------------
 
 ### Steps to Installation(UNIX):
-1. Clone this repository.
+0. fork the repository to your account
+1. Clone the repository.
 2. cd into the cloned directory.
 3. Run the command: 
       1. `chmod 744 check.sh`
