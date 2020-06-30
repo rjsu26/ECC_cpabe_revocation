@@ -7,7 +7,7 @@
 
 #include "bswabe.h"
 #include "private.h"
-
+//to be deleted later=========================================
 void serialize_string(GByteArray *b, mpz_t x)
 {
 	char *s;
@@ -19,6 +19,7 @@ void serialize_string(GByteArray *b, mpz_t x)
 	printf("\n\n%d\n\n", strlen(s));
 	g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
 }
+//=================================================================
 
 char *
 unserialize_string(GByteArray *b, int *offset, mpz_t x)
