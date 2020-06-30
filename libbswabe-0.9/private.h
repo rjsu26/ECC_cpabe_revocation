@@ -1,6 +1,9 @@
 /*
 	Include glib.h, pbc.h, and bswabe.h before including this file.
 */
+#include <openssl/bn.h>
+#include <openssl/ec.h>
+
 
 struct bswabe_pub_s //  USE IT AS MPK
 {
@@ -10,14 +13,17 @@ struct bswabe_pub_s //  USE IT AS MPK
 	mpz_t R;
 	mpz_t p_i[100];
 	mpz_t D_u; // CAPS OFF
-	mpz_t n; // number of attributes n, also the size of P_i having actual attributes
-	mpz_t P_i[100];
-	unsigned char p[32]; // prime number p
-	unsigned char a[32]; // a of Elliptic curve equation 
-	unsigned char b[32]; // b of EC equation 
-	unsigned char order[32]; // order of the EC curve
-	unsigned char G_x[32]; // generator point x
-	unsigned char G_y[32]; // generator point y
+
+	// ==============Our ECC stuff====================
+
+	int n; // number of attributes n, also the size of P_i having actual attributes. Need not be of mpz_t type
+	BIGNUM *p; // prime number p
+	BIGNUM *a; // a of Elliptic curve equation 
+	BIGNUM *b; // b of EC equation 
+	BIGNUM *order; // order of the EC curve
+	BIGNUM *G_x; // generator point x
+	BIGNUM *G_y; // generator point y
+	EC_POINT *P_i[100], *U_i[100], *V_i[100];
 };
 
 struct bswabe_msk_s // use it as MSK
@@ -29,9 +35,11 @@ struct bswabe_msk_s // use it as MSK
 	mpz_t q;
 	mpz_t n;
 	mpz_t q_i[100];
-	mpz_t alpha;
-	mpz_t k1;
-	mpz_t k2;
+	// ==============Our ECC stuff====================
+
+	BIGNUM *alpha;
+	BIGNUM *k1;
+	BIGNUM *k2;
 };
 
 struct bswabe_cph_s
