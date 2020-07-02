@@ -49,12 +49,13 @@ struct bswabe_cph_s
 	// element_t c3; /* G_1 */
 	// GArray* comps_enc; /* bswabe_enc_comp_t's */
 	// bswabe_signature_t* signature;//bswabe_policy_t* p;
-	mpz_t Y_m;
-	mpz_t R_m;
-	mpz_t C_sigma;
-	mpz_t C_m;
-	mpz_t S_m;
-	mpz_t e_p;
+	BIGNUM k1_m;
+	BIGNUM k2_m;
+	BIGNUM C_sigma;
+	BIGNUM C_m;
+	EC_POINT Pm[100];
+	//BIGNUM S_m;
+	//BIGNUM e_p;
 };
 
 struct bswabe_prv_s

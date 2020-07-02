@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <openssl/bn.h>
+#include <openssl/ec.h>
+
 #ifndef BSWABE_DEBUG
 #define NDEBUG
 #endif
@@ -235,49 +238,49 @@ void concatenate(char ans[], char *s1, char *s2, char *s3)
     return;
 }
 
-void take_Concatenate(char sol[], mpz_t m1, mpz_t m2, mpz_t m3)
+void take_Concatenate(char sol[], BIGNUM *m1, BIGNUM *m2, BIGNUM *m3)
 {
 
-    char s1[100];
-    char s2[100];
-    char s3[100];
+    char *s1;
+    char *s2;
+    char *s3;
 
     int flag = 0;
     int flag2 = 0;
     int flag3 = 0;
-    if (mpz_cmp_ui(m1, 0) == 0)
+    if (BN_is_zero(m1) == 0)
     {
-        s1[0] = "A";
+        s1 = "A";
     }
     else
     {
-        mpz_get_str(s1, 10, m1);
+        s1 = BN_bn2dec(m1)
         flag = strlen(s1);
     }
 
-    if (mpz_cmp_ui(m2, 0) == 0)
+    if (BN_is_zero(m2) == 0)
     {
-        s2[0] = "A";
+        s2 = "A";
     }
     else
     {
-        mpz_get_str(s2, 10, m2);
+        s2 = BN_bn2dec(m2)
         flag2 = strlen(s2);
     }
 
-    if (mpz_cmp_ui(m3, 0) == 0)
+    if (BN_is_zero(m3) == 0)
     {
-        s3[0] = "A";
+        s3 = "A";
     }
     else
     {
-        mpz_get_str(s3, 10, m3);
+        s3 = BN_bn2dec(m3)
         flag3 = strlen(s3);
     }
 
     int size = flag + flag2 + flag3;
     char ans[size];
-    concatenate(ans, s1, s2, s3);
+    concatenate(ans, s1, s2, s3);   // concatenate 
     int i;
     for (i = 0; i < size; i++)
     {
@@ -294,76 +297,78 @@ unsigned long int generate_random(mpz_t rand_Num, int limit)
     return seed;
 }
 
-void compute_hash(mpz_t hash, char str[])
+void compute_hash(BIGNUM *hash, char *str)
 {
-
-    mpz_init(hash);
-    mpz_t p;
-    mpz_init_set_ui(p, 2);
-    mpz_t mod;
-    mpz_init_set_ui(mod, 100);
+    BN_CTX *ctx = BN_CTX_new();
+    BIGNUM p = BN_new();
+    BN_set_word(p, 2);
+    BIGNUM mod = BN_new();
+    BN_set_word(mod, 100);
     //printf("working");
     char c;
 
     for (c = 0; c < strlen(str); c++)
     {
-        mpz_t m;
-        mpz_init(m);
-        mpz_t ans;
-        mpz_init(ans);
+        BIGNUM m = BN_new();
+        //mpz_init(m);
+        BIGNUM ans = BN_new();
+        //mpz_init(ans);
 
-        mpz_pow_ui(m, p, c);
-        mpz_mod(m, m, mod);
-        mpz_t vall;
-        int x = str[c] - '0';
+        BN_exp(m, p, c,ctx);
+        BN_mod(m, m, mod,ctx);
+        BIGNUM vall = BN_new();
+        BIGNUM x = BN_new();
+        BN_set_word(x,str[c]-'0');
 
-        mpz_init_set_ui(vall, x);
+        BN_copy(vall, x);
 
-        mpz_mul(ans, vall, m);
-        mpz_mod(ans, ans, mod);
-        mpz_add(hash, hash, ans);
-        mpz_mod(hash, hash, mod);
+        BN_mul(ans, vall, m,ctx);
+        BN_mod(ans, ans, mod,ctx);
+        BN_add(hash, hash, ans);
+        BN_mod(hash, hash, mod,ctx);
     }
 
-    gmp_printf("//////////////////%Zd//////////////////", hash);
+    //gmp_printf("//////////////////%Zd//////////////////", hash);
+    BN_CTX_free(ctx);
     return;
 }
 
-void compute_hash2(mpz_t hash, unsigned long int x)
+void compute_hash2(BIGNUM *hash, BIGNUM *x)
 {
-
-    unsigned long int num = x;
-    mpz_init(hash);
-    mpz_t p;
-    mpz_init_set_ui(p, 2);
-    mpz_t mod;
-    mpz_init_set_ui(mod, 100);
+    BN_CTX *ctx = BN_CTX_new();
+    BIGNUM *num = BN_new();
+    BN_copy(num,x);
+    BIGNUM *p = BN_new();
+    BN_set_word(p,2);
+    //mpz_init_set_ui(p, 2);
+    BIGNUM *mod = BN_new();
+    BN_set_word(mod,100);
     //printf("working");
-    int c = 0;
-
-    while (num != 0)
+    BIGNUM *c = BN_new();
+    BN_set_word(c,0);
+    
+    while (BN_is_zero(num)==1)
     {
-        mpz_t m;
-        mpz_init(m);
-        mpz_t ans;
-        mpz_init(ans);
+        BIGNUM *m = BN_new();
+        BIGNUM *ans = BN_new();
 
-        mpz_pow_ui(m, p, c);
-        mpz_mod(m, m, mod);
-        mpz_t vall;
-        unsigned long int x_ = num % 10;
-
-        mpz_init_set_ui(vall, x_);
-
-        mpz_mul(ans, vall, m);
-        mpz_mod(ans, ans, mod);
-        mpz_add(hash, hash, ans);
-        mpz_mod(hash, hash, mod);
-        c++;
-        num = num / 10;
+        BN_exp(m, p, c,ctx);
+        BN_mod(m, m, mod,ctx);
+        BIGNUM *vall = BN_new();
+        BIGNUM *ten = BN_new();
+        BN_set_word(ten,10);
+        BIGNUM *x_ = BN_new();
+        BN_mod(x_,num,ten,ctx);
+        BN_copy(vall,x);
+        BN_mul(ans, vall, m,ctx);
+        BN_mod(ans, ans, mod,ctx);
+        BN_add(hash, hash, ans);
+        BN_mod(hash, hash, mod,ctx);
+        BN_add_word(c,1);
+        BN_div_word(num,10);
     }
-
-    gmp_printf("//////////////////%Zd//////////////////", hash);
+    BN_CTX_free(ctx);
+    //gmp_printf("//////////////////%Zd//////////////////", hash);
     return;
 }
 
@@ -645,57 +650,58 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     //     mpz_powm((*mpk)->D_u, random_g, mul, (*mpk)->N);
 }
 
+
 bswabe_cph_t *
-bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, element_t m, int attrib[])
+bswabe_enc(BIGNUM *pub, bswabe_msk_t *msk, element_t m, int attrib[])
 {
 
     //#######################################ODELU####################################################
-    pairing_t px;
-    char *pairing_desc;
-    pairing_desc = strdup(TYPE_A_PARAMS);
-    pairing_init_set_buf(px, pairing_desc, strlen(pairing_desc));
-    element_init_GT(m, px);
-    element_random(m);
-    element_printf("%B", m);
+    // pairing_t px;
+    // char *pairing_desc;
+    // pairing_desc = strdup(TYPE_A_PARAMS);
+    // pairing_init_set_buf(px, pairing_desc, strlen(pairing_desc));
+    // element_init_GT(m, px);
+    // element_random(m);
+    // element_printf("%B", m);
 
-    mpz_t x;
-    mpz_init_set_ui(x, 10);
-    mpz_t HYPER_MOD;
-    mpz_init(HYPER_MOD);
-    mpz_pow_ui(HYPER_MOD, x, 100000);
-    mpz_t p_1;
-    mpz_t q_1;
-    mpz_init(p_1);
-    mpz_init(q_1);
-    mpz_sub_ui(p_1, msk->p, 1);
-    mpz_sub_ui(q_1, msk->q, 1);
-    printf("working");
-    mpz_t totient;
-    mpz_init(totient);
-    mpz_mul(totient, p_1, q_1);
-
+    // mpz_t x;
+    // mpz_init_set_ui(x, 10);
+    // mpz_t HYPER_MOD;
+    // mpz_init(HYPER_MOD);
+    // mpz_pow_ui(HYPER_MOD, x, 100000);
+    // mpz_t p_1;
+    // mpz_t q_1;
+    // mpz_init(p_1);
+    // mpz_init(q_1);
+    // mpz_sub_ui(p_1, msk->p, 1);
+    // mpz_sub_ui(q_1, msk->q, 1);
+    // printf("working");
+    // mpz_t totient;
+    // mpz_init(totient);
+    // mpz_mul(totient, p_1, q_1);
+    BN_CTX *ctx = BN_CTX_new();
     bswabe_cph_t *cph;
-
+    
     cph = malloc(sizeof(bswabe_cph_t));
 
-    mpz_t mod;
-    mpz_init_set_ui(mod, 1000000000);
+    BIGNUM mod = BN_new();
+    BN_set_word(mod,1000000000);
+    //mpz_init_set_ui(mod, 1000000000);
 
-    mpz_t blank1;
-    mpz_init(blank1);
+    // BIGNUM blank1 = BN_new();
+    // BIGNUM blank2 = BN_new();
+    //mpz_init(blank2);
 
-    mpz_t blank2;
-    mpz_init(blank2);
+    BIGNUM r_m = BN_new();
+    //BN_rand(r_m,30,-1,false);
 
-    mpz_t r_m;
-    generate_random(r_m, 30);
     //mpz_init_set_ui(r_m,1);
-    gmp_printf("\nvalue of pub->Y is %Zd and r_m in encrypt is = %Zd\n", pub->Y, r_m);
+    //gmp_printf("\nvalue of pub->Y is %Zd and r_m in encrypt is = %Zd\n", pub->Y, r_m);
     // fully correct ab misc.c ki ek copy bana
     //mpz_init(r_m);
-    //char ans[100];
+    char ans[100];
     //printf("FIRST HASHING");
-    //take_Concatenate(ans, M, sigma,blank1);
+    take_Concatenate(ans, M, sigma,blank1);
     // working on attrib and string concatenation
 
     //printf("%s\n", ans);
@@ -726,28 +732,28 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, element_t m, int attrib[])
 
     //gmp_printf("%Zd",r_m);
 
-    mpz_t e_u;
-    mpz_init_set_ui(e_u, 1);
+    // mpz_t e_u;
+    // mpz_init_set_ui(e_u, 1);
 
-    mpz_t e_p;
-    mpz_init_set_ui(e_p, 1);
-    //int n = 4;
-    int n = mpz_get_ui(pub->n);
-    //  printf("\n\\\\%d\\\\n",n);
-    int i;
-    for (i = 0; i < n; i++)
-    {
-        if (attrib[i] == 1)
-        {
-            mpz_mul(e_p, e_p, pub->p_i[i]);
-        }
-        mpz_mul(e_u, e_u, pub->p_i[i]);
-    }
-    mpz_init_set(cph->e_p, e_p);
+    // mpz_t e_p;
+    // mpz_init_set_ui(e_p, 1);
+    // //int n = 4;
+    // int n = mpz_get_ui(pub->n);
+    // //  printf("\n\\\\%d\\\\n",n);
+    // int i;
+    // for (i = 0; i < n; i++)
+    // {
+    //     if (attrib[i] == 1)
+    //     {
+    //         mpz_mul(e_p, e_p, pub->p_i[i]);
+    //     }
+    //     mpz_mul(e_u, e_u, pub->p_i[i]);
+    // }
+    // mpz_init_set(cph->e_p, e_p);
 
     // working on C_sigma and C_m and S_m
-    mpz_t inter;
-    mpz_init_set(inter, pub->D_u);
+    BIGNUM inter = BN_new();
+    BN_set_word(inter, pub->D_u);
 
     mpz_cdiv_q(e_u, e_u, e_p);
     //mpz_mod(e_u,e_u,totient);
@@ -771,11 +777,11 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, element_t m, int attrib[])
     //mpz_powm(inter, inter, r_m, mod);
     //mpz_powm(inter, inter, e_u, mod);
 
-    mpz_t H2_K_m;
-    mpz_init(H2_K_m);
+    BIGNUM H2_K_m = BN_new();
+    //mpz_init(H2_K_m);
 
-    mpz_t sigma;
-    generate_random(sigma, 30);
+    BIGNUM sigma;
+    BN_rand(sigma, 30,-1,false);
     //gmp_printf("^^^^^^ %Zd" , sigma);
 
     // -----------
@@ -784,59 +790,61 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, element_t m, int attrib[])
     //  gmp_printf("%Zd ******************* %Zd", blank1,blank2);
     char ans2[100];
 
-    mpz_t blank3;
-    mpz_t blank4;
-    mpz_init(blank3);
-    mpz_init(blank4);
+    BIGNUM blank3 = BN_new();
+    BIGNUM blank4 = BN_new;
+    // mpz_init(blank3);
+    // mpz_init(blank4);
     //take_Concatenate(ans2, inter,blank3,blank4);
-    mpz_get_str(ans2, 10, inter); // chala
+    
+    //mpz_get_str(ans2, 10, inter); // chala
+    //BN_bn2mpi(inter,ans2);
     //gmp_printf("%Zd ******************* %Zd", blank1,blank2);
 
     printf("%s---------------", ans2);
     compute_hash(H2_K_m, ans2);
     gmp_printf("k_m in encrypt is %Zd", H2_K_m);
-
-    mpz_init(cph->C_sigma);
-    mpz_xor(cph->C_sigma, H2_K_m, sigma);
+    cph->C_sigma = BN_new();
+    //mpz_init(cph->C_sigma);
+    BN_GF2m_add(cph->C_sigma, H2_K_m, sigma);
 
     gmp_printf("\n\nvalue of cph -> C_sigma = %Zd\n\n", cph->C_sigma);
-    mpz_t H3_sigma;
-    mpz_init(H3_sigma); //
+    BIGNUM H3_sigma = BN_new();
+    //mpz_init(H3_sigma); //
 
-    //char ans3[1000];
-    //take_Concatenate(ans3, sigma, blank1 , blank2);
+    char ans3[1000];
+    take_Concatenate(ans3, sigma, blank1 , blank2);
     //mpz_get_str(ans3, 10, sigma);
-    unsigned long int ans3 = mpz_get_ui(sigma);
+    //BIGNUM ans3 = mpz_get_ui(sigma);
     //gmp_printf("\n\nvalue of sigma is %Zd and blank1 is %Zd\n\n",sigm);
 
-    printf("((((((((((((((((%d))))))))))))))", ans3);
-    compute_hash2(H3_sigma, ans3);
+    //printf("((((((((((((((((%d))))))))))))))", ans3);
+    compute_hash2(H3_sigma, sigma);
 
-    mpz_t M;
-    generate_random(M, 30);
+    BIGNUM M;
+    BN_rand(M, 30 , -1 ,false);
     gmp_printf("\n\nvalue of M is %Zd and value of H3_sigma is %Zd\n\n", M, H3_sigma);
-    mpz_init(cph->C_m);
+    cph->C_m = BN_new();
     //unsigned long int value_M = mpz_get_ui(M);
     //unsigned long int value_H3 = mpz_get_ui(H3_sigma);
     //unsigned long int value_ans = value_M ^ value_H3;
     //printf("M = %d and H3 = %d and ans = %d", value_M, value_H3, value_ans);
     //mpz_init_set_ui(cph -> C_m, value_ans);
+    //BN_GF2m_add(cph->C_m,M, H3_sigma);
+    //mpz_xor(cph->C_m, M, H3_sigma);
 
-    mpz_xor(cph->C_m, M, H3_sigma);
+    // gmp_printf("\n\n3rd hash completed and value of cph -> C_m is %Zd\n\n", cph->C_m);
+    // char ans4[4];
+    // unsigned long int M_v = mpz_get_ui(M);
+    // unsigned long int sigma_v = mpz_get_ui(sigma);
 
-    gmp_printf("\n\n3rd hash completed and value of cph -> C_m is %Zd\n\n", cph->C_m);
-    char ans4[4];
-    unsigned long int M_v = mpz_get_ui(M);
-    unsigned long int sigma_v = mpz_get_ui(sigma);
+    // unsigned long int final_ans = sigma_v * 100 + M_v;
+    // //take_Concatenate(ans4, sigma, M, blank1); sigma = 15 && M = 23 sigma * 100 + 23 + 523
 
-    unsigned long int final_ans = sigma_v * 100 + M_v;
-    //take_Concatenate(ans4, sigma, M, blank1); sigma = 15 && M = 23 sigma * 100 + 23 + 523
+    // // 1627 + 1 + 12 + 16 + 56
+    // printf("\n\n value of ans4 is %s\n\n", ans4);
 
-    // 1627 + 1 + 12 + 16 + 56
-    printf("\n\n value of ans4 is %s\n\n", ans4);
-
-    compute_hash2(cph->S_m, final_ans);
-    printf("4th Hash Completed");
+    // compute_hash2(cph->S_m, final_ans);
+    // printf("4th Hash Completed");
     // working on Y_m and R_m
 
     //	mpz_t x_mod;
@@ -858,20 +866,20 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, element_t m, int attrib[])
     //	mpz_mul(z1,k_mod, r_m);
     //	mpz_mod(z1,z1,totient);
 
-    mpz_init(cph->Y_m);
-    mpz_init(cph->R_m);
-    mpz_powm(cph->Y_m, pub->Y, r_m, pub->N);
-    gmp_printf("Y_m in encrypt is = %Zd\n", cph->Y_m);
-    unsigned long int pub_R = mpz_get_ui(pub->R);
-    printf("pub_R in encrypt is = %lu\n", pub_R);
-    unsigned long int ir_m = mpz_get_ui(r_m);
-    printf("ir_m in encrypt is = %lu\n", ir_m);
-    unsigned long int pub_N = mpz_get_ui(pub->N);
-    printf("pub_N in encrypt is = %lu\n", pub_N); // specifier
-    unsigned long int cph_Rm = powe(pub_R, ir_m, pub_N);
-    mpz_init_set_ui(cph->R_m, cph_Rm);
-    //mpz_powm(cph -> R_m, pub -> R, r_m, pub -> N);
-    gmp_printf("R_m in encrypt is = %Zd\n", cph->R_m);
+    // mpz_init(cph->Y_m);
+    // mpz_init(cph->R_m);
+    // mpz_powm(cph->Y_m, pub->Y, r_m, pub->N);
+    // gmp_printf("Y_m in encrypt is = %Zd\n", cph->Y_m);
+    // unsigned long int pub_R = mpz_get_ui(pub->R);
+    // printf("pub_R in encrypt is = %lu\n", pub_R);
+    // unsigned long int ir_m = mpz_get_ui(r_m);
+    // printf("ir_m in encrypt is = %lu\n", ir_m);
+    // unsigned long int pub_N = mpz_get_ui(pub->N);
+    // printf("pub_N in encrypt is = %lu\n", pub_N); // specifier
+    // unsigned long int cph_Rm = powe(pub_R, ir_m, pub_N);
+    // mpz_init_set_ui(cph->R_m, cph_Rm);
+    // //mpz_powm(cph -> R_m, pub -> R, r_m, pub -> N);
+    // gmp_printf("R_m in encrypt is = %Zd\n", cph->R_m);
     return cph;
 }
 

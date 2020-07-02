@@ -427,7 +427,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/home/raj/Desktop/research_papers/crypto_work/RSA_cpabe/libbswabe-0.9/libbswabe-0.9'
+ac_pwd='/home/ram/Desktop/ECC_cpabe_revocation/libbswabe-0.9'
 srcdir='.'
 test -n "$AWK" || AWK=awk
 # The default lists apply if the user does not specify any file.
@@ -586,16 +586,16 @@ S["PBC_LIBS"]="-lpbc"
 S["PBC_CFLAGS"]="-I/usr/include/pbc -I/usr/local/include/pbc"
 S["GMP_LIBS"]="-lgmp"
 S["GMP_CFLAGS"]=""
-S["GLIB_MKENUMS"]="glib-mkenums"
-S["GOBJECT_QUERY"]="gobject-query"
-S["GLIB_GENMARSHAL"]="glib-genmarshal"
+S["GLIB_MKENUMS"]="/usr/bin/glib-mkenums"
+S["GOBJECT_QUERY"]="/usr/bin/gobject-query"
+S["GLIB_GENMARSHAL"]="/usr/bin/glib-genmarshal"
 S["GLIB_LIBS"]="-lglib-2.0"
 S["GLIB_CFLAGS"]="-I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include"
 S["PKG_CONFIG"]="/usr/bin/pkg-config"
 S["ALLOCA"]=""
 S["LIBOBJS"]=""
-S["EGREP"]="/bin/grep -E"
-S["GREP"]="/bin/grep"
+S["EGREP"]="/usr/bin/grep -E"
+S["GREP"]="/usr/bin/grep"
 S["CPP"]="gcc -E"
 S["OBJEXT"]="o"
 S["EXEEXT"]=""

@@ -16,8 +16,7 @@ LDFLAGS = -O3 -Wall \
 	-Wl,-rpath /usr/local/lib -lgmp \
 	-Wl,-rpath /usr/local/lib -lpbc \
 	-lbswabe \
-	-lcrypto -lcrypto \
-	-lgmp
+	-lcrypto -lcrypto 
 
 DISTNAME = cpabe-0.11
 
@@ -118,6 +117,3 @@ clean:
 distclean: clean
 	rm -rf policy_lang.c autom4te.cache Makefile config.status config.log config.cache \
 		configure configure.scan autoscan*.log *.1 *.html *.lineno
-
-new: clean 
-	$(MAKE)

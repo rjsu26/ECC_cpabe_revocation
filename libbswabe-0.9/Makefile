@@ -78,6 +78,3 @@ clean:
 distclean: clean
 	rm -rf autom4te.cache Makefile config.status config.log config.cache \
 		configure configure.scan autoscan*.log
-
-new: clean 
-	$(MAKE)

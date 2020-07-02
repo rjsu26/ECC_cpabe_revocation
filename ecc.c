@@ -8,6 +8,7 @@ void print_point(EC_GROUP *curve, EC_POINT *point, BN_CTX *ctx);
 EC_GROUP *create_curve(void);
 
 
+
 int main() {
     // Define a new curve
     EC_GROUP *curve;
@@ -26,11 +27,11 @@ int main() {
 
     //declare empty public key
     EC_POINT *pub = EC_POINT_new(curve);
-
+    print_point(curve,pub,ctx);
     /* get public key values from private key*/
     if (1 != EC_POINT_mul(curve, pub, prv, NULL, NULL, ctx)) 
         handleErrors(__LINE__);
-
+    print_point(curve,pub,ctx);
 
 /////////////////////////
     EC_POINT *r = EC_POINT_new(curve);
@@ -47,10 +48,12 @@ int main() {
     int N= 10000;
     printf("Beginning calculation for %d point doublings.\n", N);
     clock_t begin = clock();
-    for(int i=1;i<=N;i++)
+    //for(int i=1;i<=N;i++)
         if(1 != EC_POINT_dbl(curve, r, pub, ctx))
                 handleErrors(__LINE__);
-
+        printf("after doubling \n");
+        print_point(curve,r,ctx);
+    
     clock_t end = clock();
     double time_spent = (double)(end-begin);
     printf("Total time taken= %f seconds\n", time_spent/CLOCKS_PER_SEC);
