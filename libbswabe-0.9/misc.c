@@ -7,7 +7,13 @@
 
 #include "bswabe.h"
 #include "private.h"
-//to be deleted later=========================================
+
+/*just for reference
+char *BN_bn2hex(const BIGNUM *a);
+char *BN_bn2dec(const BIGNUM *a);
+int BN_hex2bn(BIGNUM **a, const char *str);
+int BN_dec2bn(BIGNUM **a, const char *str);
+*/
 void serialize_string(GByteArray *b, mpz_t x)
 {
 	char *s;
@@ -19,7 +25,48 @@ void serialize_string(GByteArray *b, mpz_t x)
 	printf("\n\n%d\n\n", strlen(s));
 	g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
 }
-//=================================================================
+
+//serialize & unserialise for bignum============================================
+
+void serialize_string(GByteArray *b, BIGNUM x)
+{
+	char *s;
+	s = malloc(sizeof(char) * 100);
+	s=BN_bn2dec(x);   //char *BN_bn2hex(const BIGNUM *a);
+	printf("\ns is %s\n", s);
+	printf("\n\n%d\n\n", strlen(s));
+	g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
+}
+
+char *
+unserialize_string(GByteArray *b, int *offset, BIGNUM x)
+{
+	GString *s;
+	char *r;
+	char *c;
+
+	s = g_string_sized_new(64);
+	while (1)
+	{
+		c = b->data[(*offset)++];
+		if (c && c != EOF)
+		{
+			//printf("@@@%s\n",c);
+			g_string_append_c(s, c);
+		}
+		else
+			break;
+	}
+
+	r = s->str;
+	g_string_free(s, 0);
+
+	printf("unserialized string is %s\n", r);
+	BN_hex2bn(x,r);   //int BN_hex2bn(BIGNUM **a, const char *str);
+	return r;
+}
+
+//================================================================
 
 char *
 unserialize_string(GByteArray *b, int *offset, mpz_t x)
