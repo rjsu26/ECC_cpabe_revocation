@@ -26,44 +26,51 @@ void serialize_string(GByteArray *b, mpz_t x)
 	g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
 }
 
-//serialize & unserialise for bignum============================================
-
-void serialize_string(GByteArray *b, BIGNUM x)
+// NEW
+//serialize for bignum ans EC_POINT ============================================
+void serialize_string_bn(GByteArray *b, BIGNUM *x)
 {
-	char *s;
-	s = malloc(sizeof(char) * 100);
-	s=BN_bn2dec(x);   //char *BN_bn2hex(const BIGNUM *a);
-	printf("\ns is %s\n", s);
-	printf("\n\n%d\n\n", strlen(s));
-	g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
+    char *s;
+    s = malloc(sizeof(char) * 100);
+    s = BN_bn2hex(x); //char *BN_bn2hex(const BIGNUM *a);
+    // printf("\ns is %s\n", s);
+    // printf("\n\n%ld\n\n", strlen(s));
+    g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
+}
+// NEW
+void serialize_string_point(GByteArray *b, EC_POINT *x, EC_GROUP *curve, BN_CTX* ctx)
+{
+    char *s;
+    s = malloc(sizeof(char) * 100);
+    s = EC_POINT_point2hex(curve,x,POINT_CONVERSION_COMPRESSED, ctx); 
+    // printf("\ns is %s\n", s);
+    // printf("\n\n%ld\n\n", strlen(s));
+    g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
 }
 
-char *
-unserialize_string(GByteArray *b, int *offset, BIGNUM x)
+char *unserialize_string(GByteArray *b, int *offset)
 {
-	GString *s;
-	char *r;
-	char *c;
+    GString *s;
+    char *r;
+    char *c;
+    s = g_string_sized_new(64);
+    while (1)
+    {
+        c = b->data[(*offset)++];
+        if (c && c != EOF)
+        {
+            //printf("@@@%s\n",c);
+            g_string_append_c(s, c);
+        }
+        else
+            break;
+    }
 
-	s = g_string_sized_new(64);
-	while (1)
-	{
-		c = b->data[(*offset)++];
-		if (c && c != EOF)
-		{
-			//printf("@@@%s\n",c);
-			g_string_append_c(s, c);
-		}
-		else
-			break;
-	}
+    r = s->str;
+    g_string_free(s, 0);
 
-	r = s->str;
-	g_string_free(s, 0);
-
-	printf("unserialized string is %s\n", r);
-	BN_hex2bn(x,r);   //int BN_hex2bn(BIGNUM **a, const char *str);
-	return r;
+    // BN_hex2bn(x, r); //int BN_hex2bn(BIGNUM **a, const char *str);
+    return r;
 }
 
 //================================================================
@@ -96,6 +103,41 @@ unserialize_string(GByteArray *b, int *offset, mpz_t x)
 	mpz_init_set_str(x, r, 10);
 
 	return r;
+}
+
+// NEW
+GByteArray *
+bswabe_pub_serialize_new(bswabe_pub_t *pub)
+{
+	GByteArray *b;
+    b = g_byte_array_new();
+	
+	// serializing n
+	char *char_arr;
+    char_arr=malloc(sizeof(char)*100);
+	sprintf(char_arr, "%d", pub->n);
+	g_byte_array_append(b, (unsigned char *)char_arr, strlen(char_arr)+1);
+
+	// serializing p, a, b, order, G_x, G_y
+	serialize_string_bn(b, pub->a);
+	serialize_string_bn(b, pub->b);
+	serialize_string_bn(b, pub->order);
+	serialize_string_bn(b, pub->G_x);
+	serialize_string_bn(b, pub->G_y);
+
+	// serializing EC_POINT P_i[], U_i[] and V_i[]
+	EC_GROUP *curve;
+    curve = create_curve(pub->a,pub->b,pub->p,pub->order,pub->G_x,pub->G_y);
+    BN_CTX *ctx = BN_CTX_new();
+
+	for(int i=0;i<pub->n;i++)
+		serialize_string_point(b, pub->P_i[i],curve,ctx);
+	for(int i=0;i<pub->n;i++)
+		serialize_string_point(b, pub->U_i[i],curve,ctx);
+	for(int i=0;i<pub->n;i++)
+		serialize_string_point(b, pub->V_i[i],curve,ctx);
+	
+	return b;
 }
 
 GByteArray *
@@ -173,14 +215,24 @@ bswabe_pub_unserialize(GByteArray *b, int free)
 	return pub;
 }
 
-GByteArray *
-bswabe_msk_serialize(bswabe_msk_t *msk, int n)
+// NEW
+GByteArray *bswabe_msk_serialize_new(bswabe_msk_t *msk)
 {
 	GByteArray *b;
-	bswabe_pub_t *pub;
+	b = g_byte_array_new();
+	// serialize alpha, k1, k2
+	serialize_string_bn(b, msk->alpha);
+	serialize_string_bn(b, msk->k1);
+	serialize_string_bn(b, msk->k2);
+	return b;
+}
+
+GByteArray *
+bswabe_msk_serialize(bswabe_msk_t *msk)
+{
+	GByteArray *b;
 	int i; //,j;
 	b = g_byte_array_new();
-	//int m = mpz_get_ui(pub ->n);
 	serialize_string(b, msk->k);
 	serialize_string(b, msk->x);
 	serialize_string(b, msk->p);

@@ -394,6 +394,23 @@ int *delete_subarr(int arr_primes[], int arr_remove[], int n, int m)
     return ans_array;
 }
 
+// Take all parameters of ECC and return an EC_GROUP
+EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIGNUM* y,){
+
+    BN_CTX *ctx;
+    ctx = BN_CTX_new()
+    EC_GROUP *curve;
+    curve = EC_GROUP_new_curve_GFp(p, a, b, ctx);
+    EC_POINT *generator;
+    generator = EC_POINT_new(curve);
+    EC_POINT_set_affine_coordinates_GFp(curve, generator, x, y, ctx);
+    EC_GROUP_set_generator(curve, generator, order, NULL);
+    EC_POINT_free(generator);
+    BN_CTX_free(ctx); 
+
+    return curve;
+}
+
 void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
 {
     // DEBUG(__LINE__);
@@ -401,74 +418,27 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     *msk = malloc(sizeof(bswabe_msk_t));
     // mpz_init_set_ui((*mpk)->n, n);
     memcpy((*mpk)->n, n, sizeof(n));
-    
-    unsigned char a_bin[32] = {
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
+    BN_CTX *ctx = BN_CTX_new();
+
+   unsigned char a_bin[32] = {
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
     };
-    unsigned char b_bin[32] = {
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x00,
-        0x07,
+     unsigned char b_bin[32] = {
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x07, 
     };
     unsigned char p_bin[32] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFC, 0x2F};
     unsigned char order_bin[32] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B, 0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41};
@@ -485,164 +455,44 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     // memcpy((*mpk)->G_x, x_bin, sizeof(x_bin));
     BN_bin2bn(y_bin, 32, (*mpk)->G_y);
 
-// ====================== write new function to generate a random  BIGNUM with given BIGNUM limits======
-/*     
-    mpz_t p;
-    int flag =  mpz_init_set_str (p, "115792089237316195423570985008687907853269984665640564039457584007908834671661", 10);// string of decimal value of p-2 where p is the prime number for bitcoin curve
-    assert(flag==0);
-    // mpz_out_str(stdout,10, p);printf ("\n");
+    BIGNUM *p_3 = BN_new(); // p_3 : p
+    BN_copy(p_3, (*mpk)->p);
+    BN_sub_word(p_3,1);
+    BN_sub_word(p_3,1);
+    BN_sub_word(p_3,1); // p_3 : p - 3
 
-    mpz_init_set_ui((*msk)->alpha,1);
-    unsigned long seed;
-    gmp_randstate_t state;
-    gmp_randinit_mt(state);
-    seed = (int)time(NULL);
-    gmp_randseed_ui(state, seed);
+// Generate random number between [0,p-4]
+    BN_rand_range((*msk)->alpha,p_3); 
+    BN_rand_range((*msk)->k1,p_3); 
+    BN_rand_range((*msk)->k2,p_3);
 
-    mpz_urandomm((*msk)->alpha, state, p);       // generates a random number between 0 and p-1 (here, p-2-1 = p-3)
-    mpz_add_ui((*msk)->alpha, (*msk)->alpha, 2); // [0,p-3] + 2 = [2,p-1] : generating random number between 2 and p-1.
-    // mpz_out_str(stdout,10, (*msk)->alpha); printf("\n");
+    // add 1 to each for two times to make the range : [2, p-2]. Avoiding p-1 because (p-1)G gives infinity point.
+    for(int i=0;i<2;i++){
+        BN_add_word((*msk)->alpha, 1);
+        BN_add_word((*msk)->k1, 1);
+        BN_add_word((*msk)->k2, 1);
+    } 
 
-    mpz_urandomm((*msk)->k1, state, p);
-    mpz_add_ui((*msk)->k1, (*msk)->k1, 2);
-    // mpz_out_str(stdout,10, (*msk)->k1); printf("\n");
+    // Create curve for calculation of P_i[], U_i[], V_i[]
+    EC_GROUP *curve= create_curve((*mpk)->a,(*mpk)->b,(*mpk)->p,(*mpk)->order,(*mpk)->G_x,(*mpk)->G_y);
 
-    mpz_urandomm((*msk)->k2, state, p);
-    mpz_add_ui((*msk)->k2, (*msk)->k2, 2);
-    // mpz_out_str(stdout,10, (*msk)->k2); printf("\n");
 
- */    
+    // Initializing P_i[0] = G and U_i[0] = k1* G and V_i[0] = k2*G
+    EC_POINT_copy((*mpk)->P_i[0],EC_GROUP_get0_generator(curve));
+    EC_POINT_mul(curve, (*mpk)->U_i[0],(*msk)->k1,NULL, NULL, ctx);
+    EC_POINT_mul(curve, (*mpk)->V_i[0],(*msk)->k2,NULL, NULL, ctx);
 
-    //     mpz_mul((*mpk)->N, (*msk)->p, (*msk)->q);
-    //     mpz_t p_1;
-    //     mpz_t q_1;
-    //     mpz_init(p_1);
-    //     mpz_init(q_1);
-    //     mpz_sub_ui(p_1, (*msk)->p, 1);
-    //     mpz_sub_ui(q_1, (*msk)->q, 1);
-    //     //  printf("working");
-    //     mpz_t totient;
-    //     mpz_init(totient);
-    //     mpz_t vax;
-    //     mpz_init_set_ui(vax, 895);
-    //     mpz_mul(totient, p_1, q_1);
+    // P_i[k] = alpha * P_i[k-1]
+    // U_i[k] =  k1* P_i[k] 
+    // V_i[k] =  k2* P_i[k]
 
-    //     mpz_t khaali;
-    //     mpz_init(khaali);
-
-    //     //mpz_init_set_ui((*pub) -> p_i[0],7);;
-    //     //mpz_init_set_ui((*pub) -> p_i[1],21);
-    //     //mpz_init_set_ui((*pub) -> p_i[2],39);
-    //     int i;
-    //     for (i = 0; i < n; i++)
-    //     {
-
-    //         unsigned long int selector = generate_random(khaali, 165);
-    //         /*mpz_t inter;
-    //                 generate_random(inter,15);
-    // 		mpz_t gcd; //
-    // 		mpz_init(gcd);
-
-    // 		// &&&&&changes made....
-    // 		mpz_mul(gcd, inter, totient);
-    // 		mpz_add_ui(gcd, gcd, 1);*/
-    //         mpz_init_set_ui((*mpk)->p_i[i], p_use[selector]);
-    //         mpz_t inter2;
-    //         mpz_init(inter2);
-    //         mpz_powm(inter2, ((*mpk)->p_i[i]), vax, totient);
-
-    //         // &&&&&changes made....
-
-    //         //gmp_printf("value of pub -> p1 == %Zd\n and value of msk -> q_i = %Zd\n", ((*pub) -> p_i[i]), inter2);
-
-    //         //if(mpz_cmp_ui(ans, 0) != 0){
-    //         //	mpz_init_set((*pub) -> p_i[i], gcd);
-    //         // working on q_i[s]
-
-    //         mpz_init_set((*msk)->q_i[i], inter2);
-    //         // l * totient  + 1 / p_i[i]
-
-    //         //}else{
-    //         //	i = i - 1;
-    //         //}
-    //         mpz_clear(inter2);
-    //         //mpz_clear(inter);
-    //     }
-    //     // now we have to generate k and x and g
-
-    //     // printf("working");
-    //     mpz_t lcm;
-    //     mpz_init_set_ui(lcm, 1);
-    //     int z;
-    //     for (z = 0; z < n; z++)
-    //     {
-    //         mpz_lcm(lcm, lcm, (*msk)->q_i[z]);
-    //     }
-
-    //     //  printf("working");
-
-    //     mpz_t random_x;
-
-    //     int selector_x = generate_random(random_x, 165);
-
-    //     mpz_init_set_ui((*msk)->x, p_use[selector_x]); // add randomnesss
-
-    //     // work on g now
-    //     mpz_t gcd_g;
-    //     mpz_init(gcd_g);
-    //     int atrr_counter_g = 0;
-    //     mpz_t random_g;
-
-    //     generate_random(random_g, 30);
-    //     //mpz_init_set_ui(random_g,13);
-    //     //	mpz_init_set((*pub) -> g, random_g);
-    //     printf("working");
-    //     /*
-    // 	mpz_sub_ui(random_g,(*pub) -> N,1);
-    // 	mpz_cdiv_q_ui(random_g, random_g,2);
-    // */
-
-    //     // working on the k // this is actually computationally ineffecient
-    //     mpz_t lcm_tot;
-    //     mpz_init(lcm_tot);
-    //     mpz_lcm(lcm_tot, lcm, totient);
-
-    //     mpz_t random_k;
-    //     int selector_k = generate_random(random_k, 165);
-    //     mpz_init_set_ui((*msk)->k, p_use[selector_k]); // add randomness
-
-    //     // working on Y and R;
-    //     mpz_t inter_R;
-    //     mpz_t inter_Y;
-    //     mpz_t mod;
-    //     printf("working");
-    //     mpz_init(inter_R);
-    //     mpz_init(inter_Y);
-    //     mpz_init_set_ui(mod, 10000000000);
-    //     mpz_powm(inter_R, random_g, (*msk)->k, (*mpk)->N);
-    //     mpz_powm(inter_Y, random_g, (*msk)->x, (*mpk)->N);
-
-    //     mpz_init_set((*mpk)->R, inter_R);
-    //     mpz_init_set((*mpk)->Y, inter_Y);
-
-    //     // work on d_u ///
-
-    //     mpz_t mul;
-    //     mpz_init_set_ui(mul, 1);
-
-    //     int universal_attr_counter = 0;
-
-    //     int o;
-    //     for (o = 0; o < n; o++)
-    //     {
-    //         //printf("%c", universal_attr[0]);
-    //         mpz_mul(mul, mul, (*msk)->q_i[universal_attr_counter]);
-    //         universal_attr_counter++;
-    //     }
-
-    //     // mul is same as d_u //
-    //     mpz_init((*mpk)->D_u);
-    //     mpz_powm((*mpk)->D_u, random_g, mul, (*mpk)->N);
+    for(int j=1;j<n;j++){
+    EC_POINT_mul(curve, (*mpk)->P_i[j],NULL, (*mpk)->P_i[j-1],(*msk)->alpha, ctx);
+    EC_POINT_mul(curve, (*mpk)->U_i[j],NULL, (*mpk)->P_i[j],(*msk)->k1, ctx);
+    EC_POINT_mul(curve, (*mpk)->V_i[j],NULL, (*mpk)->P_i[j],(*msk)->k2, ctx);
+        
+    }
+    return;
 }
 
 bswabe_cph_t *

@@ -80,8 +80,12 @@ int main(int argc, char **argv)
 	parse_args(argc, argv);
 	// DEBUG(__LINE__);
 	//printf("\n before call \n");
-	printf("\nEnter no of attributes in system::: \n");
-	scanf("%d", &n);
+	printf("\nEnter no of attributes in system : ");
+	scanf("%d", &n); printf("\n");
+	if (n<=0){
+		printf("Must have atleast 1 attribute..\n");
+		return 0;
+	}
 	// printf("n: %d\n",n);
 	// printf("Line 83 setup");
 	// printf("Setup line: %d",__LINE__);
@@ -90,8 +94,8 @@ int main(int argc, char **argv)
 	return 0;
 	//printf("\n after call \n");
 	//spit_file(pub_file,bswabe_pub_serialize(mpk),1);
-	spit_file(pub_file, bswabe_pub_serialize(mpk), 1);
-	spit_file(msk_file, bswabe_msk_serialize(msk, n), 1);
+	spit_file(pub_file, bswabe_pub_serialize_new(mpk), 1);
+	spit_file(msk_file, bswabe_msk_serialize_new(msk), 1);
 
 	t2 = clock();
 

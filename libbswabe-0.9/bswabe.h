@@ -2,6 +2,9 @@
   Include glib.h and pbc.h before including this file. Note that this
   file should be included at most once.
 */
+#include <openssl/ec.h>
+#include <openssl/bn.h>
+
 
 #if defined (__cplusplus)
 extern "C" {
@@ -131,6 +134,10 @@ GByteArray* bswabe_prv_serialize( bswabe_prv_t* prv );
 GByteArray* bswabe_cph_serialize( bswabe_cph_t* cph );
 GByteArray* bswabe_verification_serialize( bswabe_verification_t * ver );
 
+// NEW
+GByteArray *bswabe_pub_serialize_new(bswabe_pub_t *pub);
+GByteArray * bswabe_msk_serialize_new(bswabe_msk_t *msk);
+
 /*
   Also exactly what it seems. If free is true, the GByteArray passed
   in will be free'd after it is read.
@@ -156,6 +163,8 @@ void bswabe_cph_free( bswabe_cph_t* cph );
 */
 char* bswabe_error();
 
+// function to create a new ECC curve
+EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIGNUM* y,);
 #if defined (__cplusplus)
 } // extern "C"
 #endif
