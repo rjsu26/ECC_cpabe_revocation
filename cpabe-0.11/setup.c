@@ -74,32 +74,23 @@ int main(int argc, char **argv)
 	clock_t t1, t2;
 	float diff;
 
-	t1 = clock();
 	srand(time(NULL));
 
 	parse_args(argc, argv);
 	// DEBUG(__LINE__);
 	//printf("\n before call \n");
-	printf("\nEnter no of attributes in system : ");
+	printf("\nEnter no of attributes in system(1-100) : ");
 	scanf("%d", &n); printf("\n");
-	if (n<=0){
-		printf("Must have atleast 1 attribute..\n");
+	if (n<=0 || n>100){
+		printf("Number of attributes incorrect. Retry..\n");
 		return 0;
 	}
-	// printf("n: %d\n",n);
-	// printf("Line 83 setup");
-	// printf("Setup line: %d",__LINE__);
-	DEBUG(__LINE__);
+	t1 = clock();
 	bswabe_setup(&mpk, &msk, n);
-	//printf("\n after call \n");
-	//spit_file(pub_file,bswabe_pub_serialize(mpk),1);
-	DEBUG(__LINE__);
 	spit_file(pub_file, bswabe_pub_serialize_new(mpk), 1);
 	spit_file(msk_file, bswabe_msk_serialize_new(msk), 1);
 
 	t2 = clock();
-
-	//diff=((float)(t2 - t1) / 1000000.0F ) * 1000;
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
 	printf("\nTime taken in seconds=%f", diff);
 	return 0;
