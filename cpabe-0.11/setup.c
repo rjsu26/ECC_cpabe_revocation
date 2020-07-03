@@ -91,9 +91,9 @@ int main(int argc, char **argv)
 	// printf("Setup line: %d",__LINE__);
 	DEBUG(__LINE__);
 	bswabe_setup(&mpk, &msk, n);
-	return 0;
 	//printf("\n after call \n");
 	//spit_file(pub_file,bswabe_pub_serialize(mpk),1);
+	DEBUG(__LINE__);
 	spit_file(pub_file, bswabe_pub_serialize_new(mpk), 1);
 	spit_file(msk_file, bswabe_msk_serialize_new(msk), 1);
 
