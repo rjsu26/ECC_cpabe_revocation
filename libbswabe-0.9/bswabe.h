@@ -164,7 +164,7 @@ void bswabe_cph_free( bswabe_cph_t* cph );
 char* bswabe_error();
 
 // function to create a new ECC curve
-EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIGNUM* y,);
+EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIGNUM* y);
 #if defined (__cplusplus)
 } // extern "C"
 #endif

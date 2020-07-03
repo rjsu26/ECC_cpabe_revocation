@@ -395,10 +395,10 @@ int *delete_subarr(int arr_primes[], int arr_remove[], int n, int m)
 }
 
 // Take all parameters of ECC and return an EC_GROUP
-EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIGNUM* y,){
+EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIGNUM* y){
 
     BN_CTX *ctx;
-    ctx = BN_CTX_new()
+    ctx = BN_CTX_new();
     EC_GROUP *curve;
     curve = EC_GROUP_new_curve_GFp(p, a, b, ctx);
     EC_POINT *generator;
@@ -413,12 +413,18 @@ EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIG
 
 void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
 {
-    // DEBUG(__LINE__);
     *mpk = malloc(sizeof(bswabe_pub_t));
     *msk = malloc(sizeof(bswabe_msk_t));
     // mpz_init_set_ui((*mpk)->n, n);
-    memcpy((*mpk)->n, n, sizeof(n));
-    BN_CTX *ctx = BN_CTX_new();
+    DEBUG(__LINE__);
+    (*mpk)->n =  n;
+    printf("n = %d\n", (*mpk)->n);
+    // memcpy((*mpk)->n, n, sizeof(n));
+    DEBUG(__LINE__);
+    BN_CTX *ctx;
+    if (NULL == (ctx = BN_CTX_new()))
+        printf("error\n");
+    DEBUG(__LINE__);
 
    unsigned char a_bin[32] = {
         0x00, 0x00, 0x00, 0x00, 
@@ -445,53 +451,98 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     unsigned char x_bin[32] = {0x79, 0xbe, 0x66, 0x7e, 0xf9, 0xdc, 0xbb, 0xac, 0x55, 0xa0, 0x62, 0x95, 0xce, 0x87, 0x0b, 0x07, 0x02, 0x9b, 0xfc, 0xdb, 0x2d, 0xce, 0x28, 0xd9, 0x59, 0xf2, 0x81, 0x5b, 0x16, 0xf8, 0x17, 0x98};
     unsigned char y_bin[32] = {0x48, 0x3a, 0xda, 0x77, 0x26, 0xa3, 0xc4, 0x65, 0x5d, 0xa4, 0xfb, 0xfc, 0x0e, 0x11, 0x08, 0xa8, 0xfd, 0x17, 0xb4, 0x48, 0xa6, 0x85, 0x54, 0x19, 0x9c, 0x47, 0xd0, 0x8f, 0xfb, 0x10, 0xd4, 0xb8};
     
-    BN_bin2bn(a_bin, 32, (*mpk)->a);
-    BN_bin2bn(b_bin, 32, (*mpk)->b);
-    BN_bin2bn(p_bin, 32, (*mpk)->p);
-    // memcpy((*mpk)->p, p_bin, sizeof(p_bin));
-    BN_bin2bn(order_bin, 32, (*mpk)->order);
-    // memcpy((*mpk)->order, order_bin, sizeof(order_bin));
-    BN_bin2bn(x_bin, 32, (*mpk)->G_x);
-    // memcpy((*mpk)->G_x, x_bin, sizeof(x_bin));
-    BN_bin2bn(y_bin, 32, (*mpk)->G_y);
+    if(NULL == ((*mpk)->a = BN_bin2bn(a_bin, 32, NULL)))
+        printf("ERROR a_bin\n");
+    DEBUG(__LINE__);    
+    if(NULL == ((*mpk)->b = BN_bin2bn(b_bin, 32, NULL)))
+        printf("ERROR b_bin\n");    
+    if(NULL == ((*mpk)->p = BN_bin2bn(p_bin, 32, NULL)))
+        printf("ERROR p_bin\n");  
+    if(NULL == ((*mpk)->order = BN_bin2bn(order_bin, 32, NULL)))
+        printf("ERROR order\n");
+    if(NULL == ((*mpk)->G_x = BN_bin2bn(x_bin, 32, NULL)))
+        printf("ERROR G_x\n");    // memcpy((*mpk)->order, order_bin, sizeof(order_bin));
+// memcpy((*mpk)->G_x, x_bin, sizeof(x_bin));
+    if(NULL == ((*mpk)->G_y = BN_bin2bn(y_bin, 32, NULL)))
+        printf("ERROR G_y\n");
+    DEBUG(__LINE__);    
 
-    BIGNUM *p_3 = BN_new(); // p_3 : p
-    BN_copy(p_3, (*mpk)->p);
+
+    BIGNUM *p_3;
+    p_3 = BN_new(); // p_3 : p
+    if(NULL == BN_copy(p_3, (*mpk)->p))
+        printf("ERROR p_3\n");
+
+    BN_print_fp(stdout,p_3 );
+    printf("\n");
     BN_sub_word(p_3,1);
     BN_sub_word(p_3,1);
     BN_sub_word(p_3,1); // p_3 : p - 3
+    BN_print_fp(stdout,p_3 );
+    printf("\n");
+
+    DEBUG(__LINE__);
 
 // Generate random number between [0,p-4]
-    BN_rand_range((*msk)->alpha,p_3); 
-    BN_rand_range((*msk)->k1,p_3); 
-    BN_rand_range((*msk)->k2,p_3);
-
+    BIGNUM *temp;
+    temp = BN_new();
+    BN_rand_range(temp,p_3); 
+    DEBUG(__LINE__);
+    (*msk)->alpha = BN_dup(temp);
+    DEBUG(__LINE__);
+    BN_print_fp(stdout,(*msk)->alpha);
+    printf("\n");
+    DEBUG(__LINE__);
+    BN_rand_range(temp,p_3); 
+    (*msk)->k1 = BN_dup(temp);
+    BN_print_fp(stdout,(*msk)->k1 );
+    printf("\n");
+    BN_rand_range(temp,p_3);
+    (*msk)->k2 = BN_dup(temp);
+    BN_print_fp(stdout,(*msk)->k2 );
+    printf("\n");
+    DEBUG(__LINE__);
+    BN_free(p_3);
+    // BN_free(temp);
     // add 1 to each for two times to make the range : [2, p-2]. Avoiding p-1 because (p-1)G gives infinity point.
     for(int i=0;i<2;i++){
+        DEBUG(__LINE__);
         BN_add_word((*msk)->alpha, 1);
         BN_add_word((*msk)->k1, 1);
         BN_add_word((*msk)->k2, 1);
     } 
+    DEBUG(__LINE__);
 
     // Create curve for calculation of P_i[], U_i[], V_i[]
     EC_GROUP *curve= create_curve((*mpk)->a,(*mpk)->b,(*mpk)->p,(*mpk)->order,(*mpk)->G_x,(*mpk)->G_y);
-
+    EC_POINT* temp_point;
+    temp_point = EC_POINT_new(curve);
+    DEBUG(__LINE__);
 
     // Initializing P_i[0] = G and U_i[0] = k1* G and V_i[0] = k2*G
-    EC_POINT_copy((*mpk)->P_i[0],EC_GROUP_get0_generator(curve));
-    EC_POINT_mul(curve, (*mpk)->U_i[0],(*msk)->k1,NULL, NULL, ctx);
-    EC_POINT_mul(curve, (*mpk)->V_i[0],(*msk)->k2,NULL, NULL, ctx);
-
+    (*mpk)->P_i[0]= EC_POINT_dup(EC_GROUP_get0_generator(curve), curve);
+    // EC_POINT_copy((*mpk)->P_i[0],EC_GROUP_get0_generator(curve));
+    DEBUG(__LINE__);
+    EC_POINT_mul(curve,temp_point ,(*msk)->k1,NULL, NULL, ctx);
+    (*mpk)->U_i[0] = EC_POINT_dup(temp_point, curve);
+    DEBUG(__LINE__);
+    EC_POINT_mul(curve, temp_point,(*msk)->k2,NULL, NULL, ctx);
+    (*mpk)->V_i[0] = EC_POINT_dup(temp_point, curve);
     // P_i[k] = alpha * P_i[k-1]
     // U_i[k] =  k1* P_i[k] 
     // V_i[k] =  k2* P_i[k]
+    DEBUG(__LINE__);
 
     for(int j=1;j<n;j++){
-    EC_POINT_mul(curve, (*mpk)->P_i[j],NULL, (*mpk)->P_i[j-1],(*msk)->alpha, ctx);
-    EC_POINT_mul(curve, (*mpk)->U_i[j],NULL, (*mpk)->P_i[j],(*msk)->k1, ctx);
-    EC_POINT_mul(curve, (*mpk)->V_i[j],NULL, (*mpk)->P_i[j],(*msk)->k2, ctx);
-        
+        EC_POINT_mul(curve, temp_point,NULL, (*mpk)->P_i[j-1],(*msk)->alpha, ctx);
+        (*mpk)->P_i[j] = EC_POINT_dup(temp_point, curve);
+        EC_POINT_mul(curve, temp_point,NULL, (*mpk)->P_i[j],(*msk)->k1, ctx);
+        (*mpk)->U_i[j] = EC_POINT_dup(temp_point, curve);
+        EC_POINT_mul(curve, temp_point,NULL, (*mpk)->P_i[j],(*msk)->k2, ctx);
+        (*mpk)->V_i[j] = EC_POINT_dup(temp_point, curve);
+        DEBUG(__LINE__);
     }
+        
     return;
 }
 

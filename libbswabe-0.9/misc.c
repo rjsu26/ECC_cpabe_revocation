@@ -48,33 +48,6 @@ void serialize_string_point(GByteArray *b, EC_POINT *x, EC_GROUP *curve, BN_CTX*
     g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
 }
 
-char *unserialize_string(GByteArray *b, int *offset)
-{
-    GString *s;
-    char *r;
-    char *c;
-    s = g_string_sized_new(64);
-    while (1)
-    {
-        c = b->data[(*offset)++];
-        if (c && c != EOF)
-        {
-            //printf("@@@%s\n",c);
-            g_string_append_c(s, c);
-        }
-        else
-            break;
-    }
-
-    r = s->str;
-    g_string_free(s, 0);
-
-    // BN_hex2bn(x, r); //int BN_hex2bn(BIGNUM **a, const char *str);
-    return r;
-}
-
-//================================================================
-
 char *
 unserialize_string(GByteArray *b, int *offset, mpz_t x)
 {
@@ -104,6 +77,10 @@ unserialize_string(GByteArray *b, int *offset, mpz_t x)
 
 	return r;
 }
+
+
+
+//================================================================
 
 // NEW
 GByteArray *
@@ -228,11 +205,13 @@ GByteArray *bswabe_msk_serialize_new(bswabe_msk_t *msk)
 }
 
 GByteArray *
-bswabe_msk_serialize(bswabe_msk_t *msk)
+bswabe_msk_serialize(bswabe_msk_t *msk, int n)
 {
 	GByteArray *b;
+	bswabe_pub_t *pub;
 	int i; //,j;
 	b = g_byte_array_new();
+	//int m = mpz_get_ui(pub ->n);
 	serialize_string(b, msk->k);
 	serialize_string(b, msk->x);
 	serialize_string(b, msk->p);
