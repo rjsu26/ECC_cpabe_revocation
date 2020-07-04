@@ -18,9 +18,9 @@
 4. Make the desired changes and add + commit + push the changes.  
 5. Make a pull request to the master branch of the repo.
 6. Do not merge the pull request. Wait for all others to check your code.
-7. Once your code is merged, you can delete your branch using the command: `git branch -d <your_name>`.
-8. Check your current branch using : `git branch`. The branch with * mark is the current directory. It should be "master" by now. If not, use : `git checkout master`.
-9. `git pull` to bring all the new changes in the master branch to your local.
+7. Check your current branch using : `git branch`. The branch with * mark is the current directory. Use : `git checkout master` to goto master branch.
+8. Once your code is merged, you can delete your branch using the command: `git branch -d <your_name>`.
+9.  `git pull` to bring all the new changes in the master branch to your local.
 10. To make more changes, goto step 1.
 
 [Reference: working with git branches](https://thenewstack.io/dont-mess-with-the-master-working-with-branches-in-git-and-github/)

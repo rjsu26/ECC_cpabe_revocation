@@ -55,6 +55,12 @@ struct bswabe_cph_s
 	mpz_t C_m;
 	mpz_t S_m;
 	mpz_t e_p;
+
+	// ============== our ECC stuff ====================
+	int Policy[100]; // store policy values upto 100 values.
+	EC_POINT *P_m_i[99]; // to store P_m,i where i = 1, .. n - | number of 1's in Policy[ ] |, where Policy[ ] has to have atleast 1 attribute as 1. Hence n- | Policy | is at max 99 if n = 100.
+	EC_POINT *K_1m, *K_2m;  // Saving points K1m and K2m
+	unsigned char *C_sigma_m, *C_m; // both will be a string of 0 and 1 of some random variable length.  
 };
 
 struct bswabe_prv_s
