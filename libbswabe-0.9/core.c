@@ -416,15 +416,15 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     *mpk = malloc(sizeof(bswabe_pub_t));
     *msk = malloc(sizeof(bswabe_msk_t));
     // mpz_init_set_ui((*mpk)->n, n);
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
     (*mpk)->n =  n;
-    printf("n = %d\n", (*mpk)->n);
+    // printf("n = %d\n", (*mpk)->n);
     // memcpy((*mpk)->n, n, sizeof(n));
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
     BN_CTX *ctx;
     if (NULL == (ctx = BN_CTX_new()))
         printf("error\n");
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
 
    unsigned char a_bin[32] = {
         0x00, 0x00, 0x00, 0x00, 
@@ -453,7 +453,7 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     
     if(NULL == ((*mpk)->a = BN_bin2bn(a_bin, 32, NULL)))
         printf("ERROR a_bin\n");
-    DEBUG(__LINE__);    
+    // DEBUG(__LINE__);    
     if(NULL == ((*mpk)->b = BN_bin2bn(b_bin, 32, NULL)))
         printf("ERROR b_bin\n");    
     if(NULL == ((*mpk)->p = BN_bin2bn(p_bin, 32, NULL)))
@@ -465,7 +465,7 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
 // memcpy((*mpk)->G_x, x_bin, sizeof(x_bin));
     if(NULL == ((*mpk)->G_y = BN_bin2bn(y_bin, 32, NULL)))
         printf("ERROR G_y\n");
-    DEBUG(__LINE__);    
+    // DEBUG(__LINE__);    
 
 
     BIGNUM *p_3;
@@ -473,65 +473,65 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     if(NULL == BN_copy(p_3, (*mpk)->p))
         printf("ERROR p_3\n");
 
-    BN_print_fp(stdout,p_3 );
-    printf("\n");
+    // BN_print_fp(stdout,p_3 );
+    // printf("\n");
     BN_sub_word(p_3,1);
     BN_sub_word(p_3,1);
     BN_sub_word(p_3,1); // p_3 : p - 3
-    BN_print_fp(stdout,p_3 );
-    printf("\n");
+    // BN_print_fp(stdout,p_3 );
+    // printf("\n");
 
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
 
 // Generate random number between [0,p-4]
     BIGNUM *temp;
     temp = BN_new();
     BN_rand_range(temp,p_3); 
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
     (*msk)->alpha = BN_dup(temp);
-    DEBUG(__LINE__);
-    BN_print_fp(stdout,(*msk)->alpha);
-    printf("\n");
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
+    // BN_print_fp(stdout,(*msk)->alpha);
+    // printf("\n");
+    // DEBUG(__LINE__);
     BN_rand_range(temp,p_3); 
     (*msk)->k1 = BN_dup(temp);
-    BN_print_fp(stdout,(*msk)->k1 );
-    printf("\n");
+    // BN_print_fp(stdout,(*msk)->k1 );
+    // printf("\n");
     BN_rand_range(temp,p_3);
     (*msk)->k2 = BN_dup(temp);
-    BN_print_fp(stdout,(*msk)->k2 );
-    printf("\n");
-    DEBUG(__LINE__);
+    // BN_print_fp(stdout,(*msk)->k2 );
+    // printf("\n");
+    // DEBUG(__LINE__);
     BN_free(p_3);
     // BN_free(temp);
     // add 1 to each for two times to make the range : [2, p-2]. Avoiding p-1 because (p-1)G gives infinity point.
     for(int i=0;i<2;i++){
-        DEBUG(__LINE__);
+        // DEBUG(__LINE__);
         BN_add_word((*msk)->alpha, 1);
         BN_add_word((*msk)->k1, 1);
         BN_add_word((*msk)->k2, 1);
     } 
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
 
     // Create curve for calculation of P_i[], U_i[], V_i[]
     EC_GROUP *curve= create_curve((*mpk)->a,(*mpk)->b,(*mpk)->p,(*mpk)->order,(*mpk)->G_x,(*mpk)->G_y);
     EC_POINT* temp_point;
     temp_point = EC_POINT_new(curve);
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
 
     // Initializing P_i[0] = G and U_i[0] = k1* G and V_i[0] = k2*G
     (*mpk)->P_i[0]= EC_POINT_dup(EC_GROUP_get0_generator(curve), curve);
     // EC_POINT_copy((*mpk)->P_i[0],EC_GROUP_get0_generator(curve));
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
     EC_POINT_mul(curve,temp_point ,(*msk)->k1,NULL, NULL, ctx);
     (*mpk)->U_i[0] = EC_POINT_dup(temp_point, curve);
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
     EC_POINT_mul(curve, temp_point,(*msk)->k2,NULL, NULL, ctx);
     (*mpk)->V_i[0] = EC_POINT_dup(temp_point, curve);
     // P_i[k] = alpha * P_i[k-1]
     // U_i[k] =  k1* P_i[k] 
     // V_i[k] =  k2* P_i[k]
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
 
     for(int j=1;j<n;j++){
         EC_POINT_mul(curve, temp_point,NULL, (*mpk)->P_i[j-1],(*msk)->alpha, ctx);
@@ -540,7 +540,7 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
         (*mpk)->U_i[j] = EC_POINT_dup(temp_point, curve);
         EC_POINT_mul(curve, temp_point,NULL, (*mpk)->P_i[j],(*msk)->k2, ctx);
         (*mpk)->V_i[j] = EC_POINT_dup(temp_point, curve);
-        DEBUG(__LINE__);
+        // DEBUG(__LINE__);
     }
         
     return;
