@@ -148,6 +148,9 @@ bswabe_prv_t* bswabe_prv_unserialize( bswabe_pub_t* pub, GByteArray* b, int free
 bswabe_cph_t* bswabe_cph_unserialize( bswabe_pub_t* pub, GByteArray* b, int free );
 bswabe_verification_t* bswabe_verification_unserialize( bswabe_pub_t* pub, GByteArray* b, int free );
 
+// NEW
+bswabe_pub_t * bswabe_pub_unserialize_new(GByteArray *b, int free);
+bswabe_msk_t *bswabe_msk_unserialize_new(GByteArray *b, int free);
 /*
   Again, exactly what it seems.
 */

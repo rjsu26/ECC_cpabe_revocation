@@ -71,14 +71,32 @@ unserialize_string(GByteArray *b, int *offset, mpz_t x)
 	r = s->str;
 	g_string_free(s, 0);
 
-	printf("unserialized string is %s\n", r);
+	// printf("unserialized string is %s\n", r);
 
 	mpz_init_set_str(x, r, 10);
 
 	return r;
 }
 
+// NEW
+char *unserialize_string_new(GByteArray *b, int *offset){
+	GString *s;
+    char *r, *c;
+    s = g_string_sized_new(64);
+    while (1)
+    {
+        c = b->data[(*offset)++];
+        if (c && c != EOF)
+            g_string_append_c(s, c);
+        else
+            break;
+    }
 
+    r = s->str;
+    g_string_free(s, 0);
+
+    return r;
+}
 
 //================================================================
 
@@ -193,6 +211,68 @@ bswabe_pub_unserialize(GByteArray *b, int free)
 }
 
 // NEW
+bswabe_pub_t * bswabe_pub_unserialize_new(GByteArray *b, int free){
+	// BN_CTX *ctx;
+    // if (NULL == (ctx = BN_CTX_new()))
+    //     printf("error\n");
+
+	bswabe_pub_t *pub = (bswabe_pub_t *)malloc(sizeof(bswabe_pub_t));
+	int offset=0;
+	char* char_arr;
+	char_arr = unserialize_string_new(b,&offset); // for n
+	sscanf(char_arr, "%d", pub->n);
+
+	// BIGNUM *temp;
+    // temp = BN_new();
+
+	char_arr = unserialize_string_new(b,&offset); // for a
+	BN_hex2bn(pub->a,char_arr);
+	// pub->a = BN_dup(temp);
+
+	char_arr = unserialize_string_new(b,&offset); // for b
+	BN_hex2bn(pub->b, char_arr);
+	// pub->b = BN_dup(temp);
+
+	char_arr = unserialize_string_new(b,&offset); // order
+	BN_hex2bn(pub->order, char_arr);
+	// pub->order = BN_dup(temp);
+
+	char_arr = unserialize_string_new(b,&offset); // G_x
+	BN_hex2bn(pub->G_x, char_arr);
+	// pub->G_x = BN_dup(temp);
+
+	char_arr = unserialize_string_new(b,&offset); // G_y
+	BN_hex2bn(pub->G_y, char_arr);
+	// pub->G_y = BN_dup(temp);
+
+	EC_GROUP *curve;
+    curve = create_curve(pub->a,pub->b,pub->p,pub->order,pub->G_x,pub->G_y);
+	// EC_POINT* temp_point;
+	// temp_point = EC_POINT_new(curve);
+
+	for(int i=0;i<pub->n;i++){ // for P_i[ ]
+		char_arr = unserialize_string_new(b,&offset); 
+    	EC_POINT_hex2point(curve, char_arr, pub->P_i[i], ctx);
+	}
+
+	for(int i=0;i<pub->n;i++){ // for U_i[i]
+		char_arr = unserialize_string_new(b,&offset); 
+    	EC_POINT_hex2point(curve, char_arr, pub->U_i[i], ctx);
+	}
+	for(int i=0;i<pub->n;i++){  // for V_i[i]
+		char_arr = unserialize_string_new(b,&offset); 
+    	EC_POINT_hex2point(curve, char_arr, pub->V_i[i], ctx);
+	}
+	
+	// BN_CTX_free(ctx);
+	if (free)
+		g_byte_array_free(b, 1);
+	
+	return pub;
+
+}
+
+// NEW
 GByteArray *bswabe_msk_serialize_new(bswabe_msk_t *msk)
 {
 	GByteArray *b;
@@ -267,6 +347,30 @@ bswabe_msk_unserialize(GByteArray *b, int free)
 
 	return msk;
 }
+
+// NEW
+bswabe_msk_t *bswabe_msk_unserialize_new(GByteArray *b, int free){
+
+	bswabe_msk_t *msk= (bswabe_msk_t *)malloc(sizeof(bswabe_msk_t));
+	int offset=0 ;
+	char* char_arr;
+	
+	// for alpha
+	char_arr = unserialize_string_new(b,&offset); 
+	BN_hex2bn(msk->alpha, char_arr);
+	// for k1
+	char_arr = unserialize_string_new(b,&offset); 
+	BN_hex2bn(msk->k1, char_arr);
+	// for k2
+	char_arr = unserialize_string_new(b,&offset); 
+	BN_hex2bn(msk->k2, char_arr);
+
+	if (free)
+		g_byte_array_free(b, 1);
+
+	return msk;
+}
+
 
 GByteArray *
 bswabe_prv_serialize(bswabe_prv_t *prv)

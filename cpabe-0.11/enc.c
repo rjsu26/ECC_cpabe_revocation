@@ -38,14 +38,12 @@ char *out_file = 0;
 int keep = 0;
 char **attrs = 0;
 
-char **policy = 0;
-char *verification_file = "verification_key";
+// char **policy = 0;
+// char *verification_file = "verification_key";
 
 int parse_args(int argc, char **argv)
 {
 	int i, j;
-	//GSList alist[10];
-	//GSList* ap;
 	int n, flag = 0;
 	printf("\n Entry in parse_args ");
 	for (i = 1; i < argc; i++)
@@ -124,51 +122,38 @@ int main(int argc, char **argv)
 	bswabe_pub_t *pub;
 	bswabe_cph_t *cph;
 	bswabe_msk_t *msk;
-	bswabe_verification_t *V;
+	// bswabe_verification_t *V;
 	int file_len;
 	GByteArray *plt;
 	GByteArray *cph_buf;
 	GByteArray *aes_buf;
-	element_t m;
+	// element_t m;
 	clock_t t1, t2;
 	float diff;
 
-	printf("\nBefore calling parse_args function");
-	t1 = clock();
+	// printf("\nBefore calling parse_args function");
 	srand(time(NULL));
 
 	int n = parse_args(argc, argv);
-	printf("\nAfter calling parse_args function");
-	pub = bswabe_pub_unserialize(suck_file(pub_file), 1);
-	msk = bswabe_msk_unserialize(suck_file(msk_file), 1);
-	printf("\nAfter pub unserialize");
+	t1 = clock();
+	// printf("\nAfter calling parse_args function");
+	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
+	msk = bswabe_msk_unserialize_new(suck_file(msk_file), 1);
+	// printf("\nAfter pub unserialize");
 	//int n= sizeof(attrs) / sizeof(char);
-	printf("\n.... %d ....\n", n);
+	// printf("\n.... %d ....\n", n);
 	//int m = mpz_get_ui(pub -> n);
 	int attributes[n];
 	int i;
 	for (i = 0; i < n; i++)
-	{
 		if (strcmp(attrs[i], "1") == 0)
-		{
-
 			attributes[i] = 1;
-		}
 		else
-		{
 			attributes[i] = 0;
-		}
-	}
 
-	//for(int i = 0;i < 4;i++){
-	//	printf("\n%dth value of attributes[%d] is %d\n",i,i,attributes[i]);
-	//}
-	// printf("working");
 	if (!(cph = bswabe_enc(pub, msk, m, attributes)))
 		die("%s", bswabe_error());
-	//free(policy);
-	element_printf("%B\n", m);
-	//spit_file(verification_file, bswabe_verification_serialize(V),1);
+		
 	cph_buf = bswabe_cph_serialize(cph);
 	//bswabe_cph_free(cph);
 	printf("\n after cph_serialize");
@@ -177,7 +162,7 @@ int main(int argc, char **argv)
 	file_len = plt->len;
 	aes_buf = aes_128_cbc_encrypt(plt, m);
 	g_byte_array_free(plt, 1);
-	element_clear(m);
+	// element_clear(m);
 
 	write_cpabe_file(out_file, cph_buf, file_len, aes_buf);
 
