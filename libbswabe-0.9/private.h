@@ -69,6 +69,10 @@ struct bswabe_prv_s
 	mpz_t k1;
 	mpz_t k2;
 	mpz_t e_a;
+
+	// ============= Our ECC stuff ===================
+	BIGNUM *u1; 
+	BIGNUM *u2; 
 };
 
 struct bswabe_sig_s

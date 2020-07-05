@@ -66,92 +66,6 @@ void element_from_string(element_t h, char *s)
     free(r);
 }
 
-/*bswabe_sigver_t* sigkeygen(bswabe_pub_t* pub){
-	bswabe_sigver_t* pair = malloc(sizeof(bswabe_sigver_t));
-	pair -> a = malloc(sizeof(bswabe_verification_t));
-	pair -> b = malloc(sizeof(bswabe_sig_t));
-	element_init_Zr(pair -> b -> x,pub -> p);
-	element_random(pair -> b ->x);
-				//single pairing initialization for all element_t type initialisation====> computed from above string s
-				//exponentiation function used is element_pow_mpz
-				//element_t g is initialized as G1 member instead of Zr
-				//the char* member of bswabe_verification_t is uninitialised
-	element_init_Zr(pair ->a -> y,pub -> p);
-	element_random(pair -> a ->y);
-
-	element_init_G2(pair -> a ->g,pub -> p);
-	element_random(pair -> a->g);
-	element_init_G2(pair -> a->g_y, pub -> p);
-	element_pow_zn(pair -> a->g_y,pair -> a->g,pair -> a->y);
-	element_init_G2(pair -> a->g_xy, pub -> p);
-	element_pow_zn(pair -> a->g_xy,pair -> a->g_y,pair -> b -> x);//see here 
-	pair -> a -> y_s = random_binaryString();
-	return pair;
-}
-
-char* random_binaryString(){
-	srand(time(0));
-	char *s = (char*)malloc(128 * sizeof(char));
-	int count = 0;
-	while(count < 128){
-		int x = rand();
-		if(x % 2 == 0){
-			s[count] = '0';
-		}else{
-			s[count] = '1';
-		}
-		count++;
-	}
-	return s;
-}*/
-
-/*bswabe_signature_t* sign(bswabe_sig_t *sig, bswabe_cph_t *cp, bswabe_pub_t *pub){
-
-	bswabe_signature_t* signa;
-	signa = malloc(sizeof(bswabe_signature_t));
-	element_t tempp;
-	element_t temp;
-	// sigma = (C1 * C3 + C2)^x 	
-	element_init_G1(signa -> sigma, pub -> p);
-	element_init_G1(tempp, pub -> p);
-	element_init_G1(temp, pub -> p);
-
-	element_mul(tempp, cp -> c, cp -> c3);
-	//element_add(tempp, temp, cp -> c);
-	element_pow_zn(signa -> sigma, tempp, sig -> x);
- 	return signa;
-}*/
-
-/*int verify(bswabe_verification_t *ver, bswabe_signature_t *signa, bswabe_cph_t *cp, bswabe_pub_t *pub){
-	
-	//element_printf("verification key is %B", ver -> g_xy);
-	element_t pair1;
-	element_t pair2;
-	element_t temp;
-	element_t tempp;
-	element_init_GT(pair1, pub -> p);
-	element_init_GT(pair2, pub -> p);
-	//element_init_G1(signa -> sigma, pub -> p);
-	element_init_G1(tempp, pub -> p);
-	element_init_G1(temp, pub -> p);
-
-	element_mul(tempp, cp -> c, cp -> c3);
-	//element_add(tempp, temp, cp -> c);
-
-	pairing_apply(pair1, signa -> sigma, ver -> g_y, pub -> p); 
-	pairing_apply(pair2, tempp, ver -> g_xy, pub -> p);
-
-	if(element_cmp(pair1,pair2) == 0){
-		printf("\n-----verification MATCHES----------");
-		return 1;
-	}else{
-		printf("\n-----verfication does not matches-----");
-		printf("\n-----cannot decrypt--------");
-		return 0;
-	}
-
-}*/
-
 int isPrime(int x)
 {
 
@@ -394,6 +308,7 @@ int *delete_subarr(int arr_primes[], int arr_remove[], int n, int m)
     return ans_array;
 }
 
+// NEW
 // Take all parameters of ECC and return an EC_GROUP
 EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIGNUM* y){
 
@@ -415,16 +330,10 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
 {
     *mpk = malloc(sizeof(bswabe_pub_t));
     *msk = malloc(sizeof(bswabe_msk_t));
-    // mpz_init_set_ui((*mpk)->n, n);
-    // DEBUG(__LINE__);
     (*mpk)->n =  n;
-    // printf("n = %d\n", (*mpk)->n);
-    // memcpy((*mpk)->n, n, sizeof(n));
-    // DEBUG(__LINE__);
     BN_CTX *ctx;
     if (NULL == (ctx = BN_CTX_new()))
         printf("error\n");
-    // DEBUG(__LINE__);
 
    unsigned char a_bin[32] = {
         0x00, 0x00, 0x00, 0x00, 
@@ -453,7 +362,6 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     
     if(NULL == ((*mpk)->a = BN_bin2bn(a_bin, 32, NULL)))
         printf("ERROR a_bin\n");
-    // DEBUG(__LINE__);    
     if(NULL == ((*mpk)->b = BN_bin2bn(b_bin, 32, NULL)))
         printf("ERROR b_bin\n");    
     if(NULL == ((*mpk)->p = BN_bin2bn(p_bin, 32, NULL)))
@@ -461,11 +369,9 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     if(NULL == ((*mpk)->order = BN_bin2bn(order_bin, 32, NULL)))
         printf("ERROR order\n");
     if(NULL == ((*mpk)->G_x = BN_bin2bn(x_bin, 32, NULL)))
-        printf("ERROR G_x\n");    // memcpy((*mpk)->order, order_bin, sizeof(order_bin));
-// memcpy((*mpk)->G_x, x_bin, sizeof(x_bin));
+        printf("ERROR G_x\n");   
     if(NULL == ((*mpk)->G_y = BN_bin2bn(y_bin, 32, NULL)))
         printf("ERROR G_y\n");
-    // DEBUG(__LINE__);    
 
 
     BIGNUM *p_3;
@@ -473,65 +379,43 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     if(NULL == BN_copy(p_3, (*mpk)->p))
         printf("ERROR p_3\n");
 
-    // BN_print_fp(stdout,p_3 );
-    // printf("\n");
     BN_sub_word(p_3,1);
     BN_sub_word(p_3,1);
     BN_sub_word(p_3,1); // p_3 : p - 3
-    // BN_print_fp(stdout,p_3 );
-    // printf("\n");
 
-    // DEBUG(__LINE__);
 
 // Generate random number between [0,p-4]
     BIGNUM *temp;
     temp = BN_new();
     BN_rand_range(temp,p_3); 
-    // DEBUG(__LINE__);
     (*msk)->alpha = BN_dup(temp);
-    // DEBUG(__LINE__);
-    // BN_print_fp(stdout,(*msk)->alpha);
-    // printf("\n");
-    // DEBUG(__LINE__);
     BN_rand_range(temp,p_3); 
     (*msk)->k1 = BN_dup(temp);
-    // BN_print_fp(stdout,(*msk)->k1 );
-    // printf("\n");
     BN_rand_range(temp,p_3);
     (*msk)->k2 = BN_dup(temp);
-    // BN_print_fp(stdout,(*msk)->k2 );
-    // printf("\n");
-    // DEBUG(__LINE__);
     BN_free(p_3);
-    // BN_free(temp);
     // add 1 to each for two times to make the range : [2, p-2]. Avoiding p-1 because (p-1)G gives infinity point.
     for(int i=0;i<2;i++){
-        // DEBUG(__LINE__);
         BN_add_word((*msk)->alpha, 1);
         BN_add_word((*msk)->k1, 1);
         BN_add_word((*msk)->k2, 1);
     } 
-    // DEBUG(__LINE__);
 
     // Create curve for calculation of P_i[], U_i[], V_i[]
     EC_GROUP *curve= create_curve((*mpk)->a,(*mpk)->b,(*mpk)->p,(*mpk)->order,(*mpk)->G_x,(*mpk)->G_y);
     EC_POINT* temp_point;
     temp_point = EC_POINT_new(curve);
-    // DEBUG(__LINE__);
 
     // Initializing P_i[0] = G and U_i[0] = k1* G and V_i[0] = k2*G
     (*mpk)->P_i[0]= EC_POINT_dup(EC_GROUP_get0_generator(curve), curve);
     // EC_POINT_copy((*mpk)->P_i[0],EC_GROUP_get0_generator(curve));
-    // DEBUG(__LINE__);
     EC_POINT_mul(curve,temp_point ,(*msk)->k1,NULL, NULL, ctx);
     (*mpk)->U_i[0] = EC_POINT_dup(temp_point, curve);
-    // DEBUG(__LINE__);
     EC_POINT_mul(curve, temp_point,(*msk)->k2,NULL, NULL, ctx);
     (*mpk)->V_i[0] = EC_POINT_dup(temp_point, curve);
     // P_i[k] = alpha * P_i[k-1]
     // U_i[k] =  k1* P_i[k] 
     // V_i[k] =  k2* P_i[k]
-    // DEBUG(__LINE__);
 
     for(int j=1;j<n;j++){
         EC_POINT_mul(curve, temp_point,NULL, (*mpk)->P_i[j-1],(*msk)->alpha, ctx);
@@ -540,7 +424,6 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
         (*mpk)->U_i[j] = EC_POINT_dup(temp_point, curve);
         EC_POINT_mul(curve, temp_point,NULL, (*mpk)->P_i[j],(*msk)->k2, ctx);
         (*mpk)->V_i[j] = EC_POINT_dup(temp_point, curve);
-        // DEBUG(__LINE__);
     }
         
     return;
@@ -776,286 +659,68 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, element_t m, int attrib[])
     return cph;
 }
 
+// f(alpha, attrubutes) = PI((alpha + hash4(i))^(1-a_i)) , where i = 1 to n
+BIGNUM *f(BIGNUM *x,int *attributes,int n) {
+  BN_CTX *ctx = BN_CTX_new();
+  BIGNUM *res = BN_new();
+  BN_one(res);
+  BIGNUM *tmp = BN_new();
+  unsigned long int temp;
+
+  for(int i=0;i<n;i++) 
+    if(attributes[i]==0) {
+      temp = hash4(i+1); // TODO
+      // BN_zero(tmp);
+      BN_copy(tmp,x);
+      BN_add_word(tmp,temp);
+      BN_mul(res,res,tmp,ctx);
+    }
+  
+  BN_CTX_free(ctx);
+  return res;
+}
+
+
 bswabe_prv_t *bswabe_keygen(bswabe_pub_t *pub, bswabe_msk_t *msk, int user_attr_set[])
 {
-    printf("working");
-    // #################Odelu Implementation#####################
-    mpz_t x;
-    mpz_init_set_ui(x, 10);
-    mpz_t HYPER_MOD;
-    mpz_init(HYPER_MOD);
-    mpz_pow_ui(HYPER_MOD, x, 100000);
-    printf("working");
-
     bswabe_prv_t *prv;
     prv = malloc(sizeof(bswabe_prv_t));
+    BN_CTX *ctx = BN_CTX_new();
 
-    int n = mpz_get_ui(pub->n); //search
-                                //*pub = malloc(sizeof(bswabe_pub_t)); k
-                                // *msk = malloc(sizeof(bswabe_msk_t));
-                                // (*pub) -> n = n;
-                                // (*msk) -> n = n;
+    BIGNUM *f_alpha = f(msk->alpha, user_attr_set,pub->n); // findinf f(alpha, attributes)
+    BIGNUM *s_u = BN_new();
+    BIGNUM *t_u = BN_new();
+    BIGNUM *r_u = BN_new();
 
-    // mpz_init_set_ui((*msk) -> p ,1031);
-    // mpz_init_set_ui((*msk) -> q,1409);
+    // Initialise r_u and t_u with random values 
+    BN_rand_range(r_u, pub->p); 
+    BN_rand_range(t_u, pub->p);
 
-    //mpz_mul((*pub) -> N, (*msk) -> p, (*msk) -> q);
-    mpz_t p_1;
-    mpz_t q_1;
-    mpz_init(p_1);
-    mpz_init(q_1);
-    mpz_sub_ui(p_1, msk->p, 1);
-    mpz_sub_ui(q_1, msk->q, 1);
-    printf("working");
+    BIGNUM *k1_inv = BN_new();
+    BIGNUM *f_inv = BN_new();
 
-    mpz_t totient;
-    mpz_init(totient);
-    mpz_mul(totient, p_1, q_1);
-    gmp_printf("value of totient is equal to %Zd", totient);
-    printf("working");
+    // Evaluating s_u
+    BN_mod_inverse(k1_inv, msk->k1, pub->p, ctx); // k1_inv = (1/k1) mod p
+    BN_mod_inverse(f_inv, f_alpha, pub->p, ctx); // f_inv = (1/f_alpha) mod p
+    BN_mod_mul(s_u, msk->k2, r_u, pub->p, ctx); // s_u = k2 * r_u
+    BN_mod_sub(s_u,f_inv,s_u,pub->p,ctx); // s_u = (1/f_alpha) - k2* r_u
+    BN_mod_mul(s_u, s_u, k1_inv, pub->p, ctx); // s_u = (1/k1) * s_u
 
-    //WORKING ON K1
-    mpz_t d_A;
-    mpz_init_set_ui(d_A, 1);
+    // Finding u1
+    BN_mod_mul(prv->u1,msk->k1,t_u,pub->p,ctx); // u1 = k1 * t_u
+    BN_mod_add(prv->u1, r_u, prv->u1, pub->p, ctx); // u1 = r_u + k1*t_u (mod p)
 
-    //mpz_t b;                 //a_i (0 or 1)
-    //mpz_init_set_ui(b, 0);
-    //mpz_t a;
-    //mpz_init_set_ui(a, 1);
+    // Finding u2
+    BN_mod_mul(prv->u2, msk->k2, t_u, pub->p, ctx); // u2 = k2* t_u
+    BN_mod_sub(prv->u2, s_u, prv->u2, pub->p, ctx); // u2 = s_u - k2*t_u (mod p)
 
-    printf("working");
-    int universal_attr_counter = 0;
-    printf("%d", user_attr_set[0]);
-    int m;
-    for (m = 0; m < n; m++)
-    {
-
-        //printf("%c", universal_attr[0]);
-
-        if (user_attr_set[m] == 1)
-        {
-            //gmp_printf("I am inside the llop == %Zd\n",msk -> q_i[universal_attr_counter]);
-            mpz_mul(d_A, d_A, msk->q_i[universal_attr_counter]);
-        }
-
-        /* {
-                    mpz_mul(d_A, d_A,1);
-                }*/
-        universal_attr_counter++;
-    }
-    printf("working");
-    gmp_printf("d_a at init = %Zd", d_A);
-    mpz_t check;
-    mpz_init(check);
-    mpz_mod(check, d_A, totient);
-    gmp_printf("d_a check = %Zd", check);
-    mpz_t e_A;
-    mpz_init_set_ui(e_A, 1);
-    int universal_attr_count = 0;
-    int k;
-    for (k = 0; k < n; k++)
-    {
-
-        if (user_attr_set[k] == 1)
-        {
-            mpz_mul(e_A, e_A, pub->p_i[universal_attr_count]);
-        } // e_a / e_p = 1
-
-        /* else
-                {
-                    mpz_mul(e_A, e_A,1);
-                }*/
-        universal_attr_count++;
-    }
-
-    mpz_init_set(prv->e_a, e_A);
-    gmp_printf("value of k1  before init set is %Zd \n", prv->k1);
-    //WORKING ON K2
-    mpz_t random_r_u;
-    mpz_init(random_r_u); //d_A - r_u * x % k == 0 then r_u == iterator otherrwise skip ( i = 1 se (d_A - i * x) % k )
-    int i;
-    mpz_t s_u;
-    mpz_init(s_u);
-    mpz_init(prv->k1);
-    gmp_printf("value of k1 at init is %Zd \n", prv->k1);
-    mpz_init(prv->k2);
-    for (i = 1; i <= 1000000; i++)
-    {
-        mpz_t df;
-        mpz_init(df);
-        mpz_t df1;
-        mpz_init(df1);
-        mpz_mul_ui(df1, msk->x, i);
-        mpz_sub(df, d_A, df1);
-        mpz_t mod1;
-        mpz_init(mod1);
-        mpz_mod(mod1, df, msk->k);
-
-        if (mpz_cmp_ui(mod1, 0) < 0)
-        {
-            break;
-        }
-        else if (mpz_cmp_ui(mod1, 0) == 0)
-        {
-            mpz_init_set_ui(prv->k2, i);
-            mpz_cdiv_q(df, df, msk->k);
-            gmp_printf("value of k1 in else if before init set is %Zd \n", prv->k1);
-            mpz_init_set(prv->k1, df); //chala
-            gmp_printf("value of k1 in else if after init set is %Zd \n", prv->k1);
-            break;
-        }
-    }
-
-    //generate_random(random_r_u,15);
-    //gmp_printf("value of random after just initialize = %Zd\n", random_r_u);
-    mpz_t random_t_u;
-    mpz_init_set_ui(random_t_u, 1);
-    //generate_random(random_t_u,15);
-
-    //take k and x
-    //mpz_t random_x;
-    //generate_random(random_x);
-    //mpz_init_set(msk -> x, random_x);
-
-    //mpz_t random_k;
-    //generate_random(random_k);
-    //mpz_init_set(msk -> k, random_k);
-
-    //compute s_u from d_A = ks_u + r_u x modtotient
-
-    /*mpz_t a1;
-   mpz_init(a1);
-   mpz_mod(a1,d_A,totient);
-   mpz_t a2;
-   mpz_init(a2);
-   mpz_t prod2;    //r_ux
-   mpz_init(prod2);
-   mpz_mul(prod2, msk -> x, random_r_u); 
-   mpz_mod(a2,prod2,totient);
-
-   mpz_t b;
-   mpz_init(b);
-   mpz_sub(b,a1,a2);
-  
-   mpz_t a3;
-   mpz_init(a3);
-   mpz_t m;
-   generate_random(m,15);
-   mpz_mul(a3,m,totient); 
-
-   mpz_t s_u;
-   mpz_init(s_u);
-
-   mpz_add(s_u,a3,b);*/
-
-    gmp_printf("s_u  calculated is %Zd \n", s_u);
-
-    /* mpz_t K;
-   mpz_t s_u;
-   mpz_init(s_u);
-   
-   mpz_t rand;
-   generate_random(rand);
-   mpz_init_set(K, rand);
-
-   mpz_t prod1;    //K*tot
-   mpz_init(prod1);
-   mpz_mul(prod1, K, totient);
-
-   mpz_t prod2;    //r_ux
-   mpz_init(prod2);
-   mpz_mul(prod2, msk -> x, random_r_u);
-    
-   mpz_add(prod1,prod1,prod2);
-
-   mpz_t var;
-   mpz_init(var);
-   mpz_sub(var,d_A,prod1);
-   
-  
-   mpz_cdiv_q (s_u, var,msk -> k); */
-    //s_u
-
-    mpz_t v1;
-    mpz_init(v1);
-    mpz_t v2;
-    mpz_init(v2);
-    mpz_t v3;
-    mpz_init(v3);
-    mpz_mul(v1, msk->k, s_u);
-    mpz_mul(v2, random_r_u, msk->x);
-    mpz_add(v1, v1, v2);
-    mpz_mod(v3, v1, totient);
-    gmp_printf("d_A reverse calculated is %Zd \n", v3);
-
-    gmp_printf("value of totient in keygen is equal to %Zd", totient);
-    //Compute k1 and k2 from s_u
-    // first k1
-    // mpz_t k1;
-
-    /*mpz_t prod3;
-   mpz_init(prod3);
-   mpz_init(prv -> k1);
-   mpz_mul(prod3, msk-> x, random_t_u);  // x*random
-   mpz_t a;
-   mpz_init(a);
-   mpz_add(a,s_u,prod3);  // s_u + x*random
-   mpz_mod (prv -> k1, a, totient);*/
-    // (s_u + x*random)mod(tot)
-
-    // now k2
-    /* mpz_init(prv -> k2);
-   mpz_t prod4;
-   mpz_init(prod4);
-   mpz_mul(prod4, msk -> k, random_t_u);       //k*t_u
-   
-   gmp_printf("value of random before subtraction = %Zd\n", random_r_u); // 31 * 11 + 11 * 2289  25520 
-   
-   mpz_t difference ;
-   mpz_init(difference);
-   
-   mpz_sub(difference,random_r_u,prod4);  // r_u  - k*t_u                                 // uncomment this .......
-   //mpz_abs(difference,difference);// comment this ..
-  
-    gmp_printf("\nvalue of difference is equal to %Zd \n",difference); 
-   //mpz_init_set_ui(prv -> k2, 68);
-
-   //gmp_printf("value of random_r_u = %Zd\n value of totient = %Zd\n",random_r_u, totient); 
-   mpz_t variable;
-   mpz_init(variable);
-   mpz_mod (variable, difference, totient);
-   mpz_init_set(prv ->k2,variable);*/
-
-    mpz_t var1;
-    mpz_init(var1);
-    mpz_t var2;
-    mpz_init(var2);
-    gmp_printf("\nk1 in d_a is equal to %Zd \n", prv->k1);
-    gmp_printf("\nk2 in d_a is equal to %Zd\n", prv->k2);
-    gmp_printf("\nmsk->x in d_a is equal to %Zd\n", msk->x);
-    gmp_printf("\nmsk->k in d_a is equal to %Zd\n", msk->k);
-    mpz_mul(var1, msk->x, prv->k2); // xk2
-    mpz_mul(var2, msk->k, prv->k1); // kk1
-    gmp_printf("msk ->x = %Zd\n", msk->x);
-    gmp_printf("msk ->k = %Zd\n", msk->k);
-    mpz_t add1;
-    mpz_init(add1);
-    mpz_t add2;
-    mpz_init(add2);
-    mpz_add(add1, var2, var1); // xk2 + kk1
-                               // gmp_printf("\nadd1 in d_a is equal to %Zd\n",add1);
-    mpz_mod(add2, add1, totient);
-    gmp_printf("d_A = %Zd", add2);
-
-    // mpz_t k2;
-    //mpz_t diff;
-    //mpz_init(diff);
-    //mpz_sub(diff,random_r_u,prod4);
-    //mpz_init_set(k2, diff);
-    printf("working");
-
-    // TAKE user secret key k_u as  (k1,k2)
-    gmp_printf("value of k1 just before returning prv is %Zd \n", prv->k1);
+    BN_free(f_alpha);
+    BN_free(s_u);
+    BN_free(r_u);
+    BN_free(t_u);
+    BN_free(k1_inv);
+    BN_free(f_inv);
+    BN_CTX_free(ctx);
     return prv;
 }
 

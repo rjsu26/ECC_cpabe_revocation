@@ -211,7 +211,7 @@ bswabe_pub_unserialize(GByteArray *b, int free)
 }
 
 // NEW
-bswabe_pub_t * bswabe_pub_unserialize_new(GByteArray *b, int free){
+bswabe_pub_t *bswabe_pub_unserialize_new(GByteArray *b, int free){
 	// BN_CTX *ctx;
     // if (NULL == (ctx = BN_CTX_new()))
     //     printf("error\n");
