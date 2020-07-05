@@ -45,16 +45,16 @@ char *usage =
 	as different numerical values)
 */
 
-char *pub_file = 0;
-char *msk_file = 0;
+char *pub_file = "pub_key";
+char *msk_file = "master_key";
 char **attrs = 0;
 
 char *out_file = "priv_key";
 
-gint comp_string(gconstpointer a, gconstpointer b)
-{
-	return strcmp(a, b);
-}
+// gint comp_string(gconstpointer a, gconstpointer b)
+// {
+// 	return strcmp(a, b);
+// }
 
 int parse_args(int argc, char **argv)
 {
@@ -126,32 +126,23 @@ int main(int argc, char **argv)
 	clock_t t1, t2;
 	float diff;
 
-	t1 = clock();
 	srand(time(NULL));
 	int n = parse_args(argc, argv);
-	pub = bswabe_pub_unserialize(suck_file(pub_file), 1);
-	printf("\nafter pub_unserialize in keygen");
-	msk = bswabe_msk_unserialize(suck_file(msk_file), 1);
+	t1 = clock();
 
-	//int n = mpz_get_ui(pub -> n);
+	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
+	msk = bswabe_msk_unserialize_new(suck_file(msk_file), 1);
+
 	int attributes[n];
-	int i;
-	printf("\nLine 139\n");
-	for (i = 0; i < n; i++)
-	{
+	for (int i = 0; i < n; i++)
 		if (strcmp(attrs[i], "1") == 0)
 			attributes[i] = 1;
 		else
 			attributes[i] = 0;
-	}
 
-	printf("\nLine 152\n");
-	printf("\nLine 153\n");
 	prv = bswabe_keygen(pub, msk, attributes);
 
-	printf("\nafter calling core.c\n");
-
-	spit_file(out_file, bswabe_prv_serialize(prv), 1);
+	spit_file(out_file, bswabe_prv_serialize_new(prv), 1);
 	t1 = clock();
 
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
