@@ -35,6 +35,9 @@ void print_bignum(BIGNUM * num) {
 void handleErrors(int lineNumber) {
     printf("Error at LINE=%d\n", lineNumber);
 }
+
+//MSk has alpha k1 and k2
+
 void test(void){
     char *ans;
     BN_CTX *ctx = BN_CTX_new();

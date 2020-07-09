@@ -65,11 +65,14 @@ struct bswabe_cph_s
 
 struct bswabe_prv_s
 {
-
+	BIGNUM*u1;
+	BIGNUM*u2;
 	mpz_t k1;
 	mpz_t k2;
 	mpz_t e_a;
 };
+
+
 
 struct bswabe_sig_s
 {
