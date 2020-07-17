@@ -57,7 +57,7 @@ void bswabe_setup( bswabe_pub_t** pub, bswabe_msk_t** msk ,int n);
   argument should be a null terminated array of pointers to strings,
   one for each attribute.
 */
-bswabe_prv_t* bswabe_keygen( bswabe_pub_t* pub,
+bswabe_prv_t* bswabe_keygen( bswabe_prv_t** prv,bswabe_pub_t* pub,
                              bswabe_msk_t* msk,
                               int user_attr_set[]);
 
@@ -137,6 +137,7 @@ GByteArray* bswabe_verification_serialize( bswabe_verification_t * ver );
 // NEW
 GByteArray *bswabe_pub_serialize_new(bswabe_pub_t *pub);
 GByteArray * bswabe_msk_serialize_new(bswabe_msk_t *msk);
+GByteArray *bswabe_prv_serialize_new(bswabe_prv_t *prv);
 
 /*
   Also exactly what it seems. If free is true, the GByteArray passed

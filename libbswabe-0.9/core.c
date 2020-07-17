@@ -315,12 +315,16 @@ EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIG
     BN_CTX *ctx;
     ctx = BN_CTX_new();
     EC_GROUP *curve;
+    DEBUG(__LINE__);
     curve = EC_GROUP_new_curve_GFp(p, a, b, ctx);
     EC_POINT *generator;
+    //DEBUG(__LINE__);
     generator = EC_POINT_new(curve);
     EC_POINT_set_affine_coordinates_GFp(curve, generator, x, y, ctx);
+    //DEBUG(__LINE__);
     EC_GROUP_set_generator(curve, generator, order, NULL);
     EC_POINT_free(generator);
+    //DEBUG(__LINE__);
     BN_CTX_free(ctx); 
 
     return curve;
@@ -659,21 +663,24 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, element_t m, int attrib[])
     return cph;
 }
 
+unsigned long int hash4(int i){
+    return i;
+}
 // f(alpha, attrubutes) = PI((alpha + hash4(i))^(1-a_i)) , where i = 1 to n
-BIGNUM *f(BIGNUM *x,int *attributes,int n) {
+BIGNUM *f(BIGNUM *x, int *attributes, int n) {
   BN_CTX *ctx = BN_CTX_new();
   BIGNUM *res = BN_new();
   BN_one(res);
   BIGNUM *tmp = BN_new();
   unsigned long int temp;
 
+  //DEBUG(__LINE__);
   for(int i=0;i<n;i++) 
     if(attributes[i]==0) {
-      temp = hash4(i+1); // TODO
-      // BN_zero(tmp);
-      BN_copy(tmp,x);
-      BN_add_word(tmp,temp);
-      BN_mul(res,res,tmp,ctx);
+        temp = hash4(i+1); // TODO
+        BN_copy(tmp,x);
+        BN_add_word(tmp,temp);
+        BN_mul(res,res,tmp,ctx);
     }
   
   BN_CTX_free(ctx);
@@ -681,12 +688,18 @@ BIGNUM *f(BIGNUM *x,int *attributes,int n) {
 }
 
 
-bswabe_prv_t *bswabe_keygen(bswabe_pub_t *pub, bswabe_msk_t *msk, int user_attr_set[])
+bswabe_prv_t *bswabe_keygen(bswabe_prv_t** prv, bswabe_pub_t *pub, bswabe_msk_t *msk, int user_attr_set[])
 {
-    bswabe_prv_t *prv;
-    prv = malloc(sizeof(bswabe_prv_t));
-    BN_CTX *ctx = BN_CTX_new();
+    BN_CTX *ctx ;
+    if (NULL == (ctx = BN_CTX_new()))
+        printf("error\n");
+    //DEBUG(__LINE__);
+    *prv = malloc(sizeof(bswabe_prv_t));
+    //DEBUG(__LINE__);
+    (*prv)->u1 = BN_new();
+    (*prv)->u2 = BN_new();
 
+    // //DEBUG(__LINE__);
     BIGNUM *f_alpha = f(msk->alpha, user_attr_set,pub->n); // findinf f(alpha, attributes)
     BIGNUM *s_u = BN_new();
     BIGNUM *t_u = BN_new();
@@ -696,6 +709,7 @@ bswabe_prv_t *bswabe_keygen(bswabe_pub_t *pub, bswabe_msk_t *msk, int user_attr_
     BN_rand_range(r_u, pub->p); 
     BN_rand_range(t_u, pub->p);
 
+    //DEBUG(__LINE__);
     BIGNUM *k1_inv = BN_new();
     BIGNUM *f_inv = BN_new();
 
@@ -707,13 +721,18 @@ bswabe_prv_t *bswabe_keygen(bswabe_pub_t *pub, bswabe_msk_t *msk, int user_attr_
     BN_mod_mul(s_u, s_u, k1_inv, pub->p, ctx); // s_u = (1/k1) * s_u
 
     // Finding u1
-    BN_mod_mul(prv->u1,msk->k1,t_u,pub->p,ctx); // u1 = k1 * t_u
-    BN_mod_add(prv->u1, r_u, prv->u1, pub->p, ctx); // u1 = r_u + k1*t_u (mod p)
+    //DEBUG(__LINE__);
+    BN_mod_mul((*prv)->u1, msk->k1, t_u, pub->p, ctx); // u1 = k1 * t_u
+	BN_print_fp(stdout, (*prv)->u1); printf("\n");
+    // BN_mod_add(prv->u1, r_u, prv->u1, pub->p, ctx); // u1 = r_u + k1*t_u (mod p)
 
+    //DEBUG(__LINE__);
     // Finding u2
-    BN_mod_mul(prv->u2, msk->k2, t_u, pub->p, ctx); // u2 = k2* t_u
-    BN_mod_sub(prv->u2, s_u, prv->u2, pub->p, ctx); // u2 = s_u - k2*t_u (mod p)
+    BN_mod_mul((*prv)->u2, msk->k2, t_u, pub->p, ctx); // u2 = k2* t_u
+    //DEBUG(__LINE__);
+    BN_mod_sub((*prv)->u2, s_u, (*prv)->u2, pub->p, ctx); // u2 = s_u - k2*t_u (mod p)
 
+    //DEBUG(__LINE__);
     BN_free(f_alpha);
     BN_free(s_u);
     BN_free(r_u);

@@ -8,6 +8,8 @@
 #include "bswabe.h"
 #include "private.h"
 
+#define DEBUG(arg) printf("file %s Line #%d\n", __FILE__, arg);
+
 /*just for reference
 char *BN_bn2hex(const BIGNUM *a);
 char *BN_bn2dec(const BIGNUM *a);
@@ -93,6 +95,8 @@ char *unserialize_string_new(GByteArray *b, int *offset){
     }
 
     r = s->str;
+	// DEBUG(__LINE__);
+	// printf("%s\n", r);
     g_string_free(s, 0);
 
     return r;
@@ -114,6 +118,7 @@ bswabe_pub_serialize_new(bswabe_pub_t *pub)
 	g_byte_array_append(b, (unsigned char *)char_arr, strlen(char_arr)+1);
 
 	// serializing p, a, b, order, G_x, G_y
+	serialize_string_bn(b, pub->p);
 	serialize_string_bn(b, pub->a);
 	serialize_string_bn(b, pub->b);
 	serialize_string_bn(b, pub->order);
@@ -212,38 +217,59 @@ bswabe_pub_unserialize(GByteArray *b, int free)
 
 // NEW
 bswabe_pub_t *bswabe_pub_unserialize_new(GByteArray *b, int free){
-	// BN_CTX *ctx;
-    // if (NULL == (ctx = BN_CTX_new()))
-    //     printf("error\n");
-
-	bswabe_pub_t *pub = (bswabe_pub_t *)malloc(sizeof(bswabe_pub_t));
+	BN_CTX *ctx;
+    if (NULL == (ctx = BN_CTX_new()))
+        printf("error\n");
+	
+	bswabe_pub_t *pub = (bswabe_pub_t*)malloc(sizeof(bswabe_pub_t));
 	int offset=0;
 	char* char_arr;
+	// DEBUG(__LINE__);
 	char_arr = unserialize_string_new(b,&offset); // for n
-	sscanf(char_arr, "%d", pub->n);
+	// DEBUG(__LINE__);
+	sscanf(char_arr, "%d", &(pub->n));
+	// printf("pub->n is %d\n", pub->n);
+	// DEBUG(__LINE__);
 
-	// BIGNUM *temp;
-    // temp = BN_new();
+	BIGNUM *temp;
+    temp = BN_new();
 
 	char_arr = unserialize_string_new(b,&offset); // for a
-	BN_hex2bn(pub->a,char_arr);
-	// pub->a = BN_dup(temp);
+	BN_hex2bn(&temp,char_arr);
+	// printf("%s\n", char_arr);
+	pub->p = BN_dup(temp);
+
+	char_arr = unserialize_string_new(b,&offset); // for a
+	BN_hex2bn(&temp,char_arr);
+	// printf("%s\n", char_arr);
+	pub->a = BN_dup(temp);
+	// BN_copy(pub->a, temp);
+	// DEBUG(__LINE__);
 
 	char_arr = unserialize_string_new(b,&offset); // for b
-	BN_hex2bn(pub->b, char_arr);
-	// pub->b = BN_dup(temp);
+	BN_hex2bn(&temp, char_arr);
+	// printf("%s\n", char_arr);
+	pub->b = BN_dup(temp);
+	// BN_copy(pub->b, temp);
 
+	// DEBUG(__LINE__);
 	char_arr = unserialize_string_new(b,&offset); // order
-	BN_hex2bn(pub->order, char_arr);
-	// pub->order = BN_dup(temp);
+	BN_hex2bn(&temp, char_arr);
+	// printf("\n%s\n", char_arr);
+	// DEBUG(__LINE__);
+	// BN_print_fp(stdout, temp);
+	// printf("\n");
+	pub->order = BN_dup(temp);
 
 	char_arr = unserialize_string_new(b,&offset); // G_x
-	BN_hex2bn(pub->G_x, char_arr);
-	// pub->G_x = BN_dup(temp);
+	BN_hex2bn(&temp, char_arr);
+	// printf("\n%s\n", char_arr);
+	pub->G_x = BN_dup(temp);
 
 	char_arr = unserialize_string_new(b,&offset); // G_y
-	BN_hex2bn(pub->G_y, char_arr);
-	// pub->G_y = BN_dup(temp);
+	BN_hex2bn(&temp, char_arr);
+	pub->G_y = BN_dup(temp);
+
 
 	EC_GROUP *curve;
     curve = create_curve(pub->a,pub->b,pub->p,pub->order,pub->G_x,pub->G_y);
@@ -357,13 +383,13 @@ bswabe_msk_t *bswabe_msk_unserialize_new(GByteArray *b, int free){
 	
 	// for alpha
 	char_arr = unserialize_string_new(b,&offset); 
-	BN_hex2bn(msk->alpha, char_arr);
+	BN_hex2bn(&(msk->alpha), char_arr);
 	// for k1
 	char_arr = unserialize_string_new(b,&offset); 
-	BN_hex2bn(msk->k1, char_arr);
+	BN_hex2bn(&(msk->k1), char_arr);
 	// for k2
 	char_arr = unserialize_string_new(b,&offset); 
-	BN_hex2bn(msk->k2, char_arr);
+	BN_hex2bn(&(msk->k2), char_arr);
 
 	if (free)
 		g_byte_array_free(b, 1);
@@ -385,6 +411,22 @@ bswabe_prv_serialize(bswabe_prv_t *prv)
 	serialize_string(b, prv->e_a);
 
 	return b;
+}
+
+// NEW
+GByteArray *
+bswabe_prv_serialize_new(bswabe_prv_t *prv)
+{
+	GByteArray *b;
+	int i;
+
+	b = g_byte_array_new();
+
+	serialize_string_bn(b, prv->u1);
+	serialize_string_bn(b, prv->u2);
+
+	return b;
+
 }
 
 bswabe_prv_t *

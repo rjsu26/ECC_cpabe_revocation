@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
+#include <openssl/bn.h>
 
 #include "bswabe.h"
 #include "common.h"
@@ -122,41 +123,44 @@ int main(int argc, char **argv)
 	bswabe_pub_t *pub;
 	bswabe_cph_t *cph;
 	bswabe_msk_t *msk;
-	// bswabe_verification_t *V;
 	int file_len;
 	GByteArray *plt;
 	GByteArray *cph_buf;
 	GByteArray *aes_buf;
-	// element_t m;
+	element_t m;
 	clock_t t1, t2;
 	float diff;
 
-	// printf("\nBefore calling parse_args function");
 	srand(time(NULL));
 
 	int n = parse_args(argc, argv);
 	t1 = clock();
-	// printf("\nAfter calling parse_args function");
 	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
-	msk = bswabe_msk_unserialize_new(suck_file(msk_file), 1);
-	// printf("\nAfter pub unserialize");
-	//int n= sizeof(attrs) / sizeof(char);
-	// printf("\n.... %d ....\n", n);
-	//int m = mpz_get_ui(pub -> n);
+	// msk = bswabe_msk_unserialize_new(suck_file(msk_file), 1);
+	
 	int attributes[n];
-	int i;
-	for (i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 		if (strcmp(attrs[i], "1") == 0)
 			attributes[i] = 1;
 		else
 			attributes[i] = 0;
 
+	BN_CTX *ctx = BN_CTX_new();
+    BIGNUM *key = BN_new();
+    BN_rand(key,256,-1,1); 
+
+	unsigned char *M;
+	strcpy(M, (char *)BN_bn2dec(key));
+	strcpy(M, (char *)'\n');
+    BN_rand(key,128,-1,1); 
+	strcpy(M, (char *)BN_bn2dec(key));
+	
 	if (!(cph = bswabe_enc(pub, msk, m, attributes)))
 		die("%s", bswabe_error());
 		
 	cph_buf = bswabe_cph_serialize(cph);
 	//bswabe_cph_free(cph);
-	printf("\n after cph_serialize");
+	// printf("\n after cph_serialize");
 
 	plt = suck_file(in_file);
 	file_len = plt->len;
