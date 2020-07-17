@@ -57,7 +57,7 @@ void bswabe_setup( bswabe_pub_t** pub, bswabe_msk_t** msk ,int n);
   argument should be a null terminated array of pointers to strings,
   one for each attribute.
 */
-bswabe_prv_t* bswabe_keygen( bswabe_pub_t* pub,
+bswabe_prv_t* bswabe_keygen( bswabe_prv_t** prv,bswabe_pub_t* pub,
                              bswabe_msk_t* msk,
                               int user_attr_set[]);
 

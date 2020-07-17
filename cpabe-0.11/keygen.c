@@ -103,7 +103,7 @@ int parse_args(int argc, char **argv)
 		}
 		else
 		{
-			printf("taking attributes at %d\n", i);
+			// printf("taking attributes at %d\n", i);
 			parse_attribute(&alist, argv[i]);
 		}
 	}
@@ -114,7 +114,7 @@ int parse_args(int argc, char **argv)
 
 	//alist = g_slist_sort(alist, comp_string);
 	n = g_slist_length(alist);
-	printf("Alist size is %d\n", n);
+	// printf("Alist size is %d\n", n);
 	// printf("%s\n", alist->data);
 	// alist=alist->next;
 	// printf("%s\n", alist->data);
@@ -135,7 +135,7 @@ int parse_args(int argc, char **argv)
 		
 		// DEBUG(__LINE__);	
 		attrs[i] = ap->data;
-		printf("\nattrs[%d]= [%s] \n", i, attrs[i]);
+		// printf("\nattrs[%d]= [%s] \n", i, attrs[i]);
 		ap = ap->next;
 	}
 
@@ -152,15 +152,11 @@ int main(int argc, char **argv)
 	bswabe_prv_t *prv;
 	clock_t t1, t2;
 	float diff;
-	printf("%s\n", "Hey there");
 	srand(time(NULL));
 	int n = parse_args(argc, argv);
 	t1 = clock();
-	DEBUG(__LINE__);
 	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
-	DEBUG(__LINE__);
 	msk = bswabe_msk_unserialize_new(suck_file(msk_file), 1);
-	DEBUG(__LINE__);
 
 	int attributes[n];
 	for (int i = 0; i < n; i++)
@@ -169,13 +165,12 @@ int main(int argc, char **argv)
 		else
 			attributes[i] = 0;
 
-	DEBUG(__LINE__);
-	prv = bswabe_keygen(pub, msk, attributes);
+	bswabe_keygen(&prv, pub, msk, attributes);
 
 	spit_file(out_file, bswabe_prv_serialize_new(prv), 1);
-	t1 = clock();
+	t2 = clock();
 
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
-	printf("\nTime taken in seconds=%f", diff);
+	printf("\nTime taken in seconds=%f\n\n", diff);
 	return 0;
 }
