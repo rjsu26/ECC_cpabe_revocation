@@ -52,7 +52,7 @@ struct bswabe_cph_s
 	mpz_t Y_m;
 	mpz_t R_m;
 	mpz_t C_sigma;
-	mpz_t C_m;
+	// mpz_t C_m;
 	mpz_t S_m;
 	mpz_t e_p;
 

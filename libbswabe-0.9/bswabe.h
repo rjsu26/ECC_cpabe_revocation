@@ -137,6 +137,7 @@ GByteArray* bswabe_verification_serialize( bswabe_verification_t * ver );
 // NEW
 GByteArray *bswabe_pub_serialize_new(bswabe_pub_t *pub);
 GByteArray * bswabe_msk_serialize_new(bswabe_msk_t *msk);
+GByteArray *bswabe_prv_serialize_new(bswabe_prv_t *prv);
 
 /*
   Also exactly what it seems. If free is true, the GByteArray passed
