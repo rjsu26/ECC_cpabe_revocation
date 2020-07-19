@@ -451,6 +451,26 @@ bswabe_prv_unserialize(bswabe_pub_t *pub, GByteArray *b, int free)
 	return prv;
 }
 
+// NEW
+bswabe_prv_t *bswabe_prv_unserialize_new(GByteArray *b, int free){
+	bswabe_prv_t *prv;
+	int offset=0;
+	prv = (bswabe_prv_t *)malloc(sizeof(bswabe_prv_t));
+	char* char_arr;
+	
+	// for u1
+	char_arr = unserialize_string_new(b,&offset); 
+	BN_hex2bn(&(prv->u1), char_arr);
+	// for u2
+	char_arr = unserialize_string_new(b,&offset); 
+	BN_hex2bn(&(prv->u2), char_arr);
+
+	if (free)
+		g_byte_array_free(b, 1);
+
+	return prv;
+}
+
 GByteArray *
 bswabe_cph_serialize(bswabe_cph_t *cph)
 {

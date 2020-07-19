@@ -100,7 +100,7 @@ int isPrime(int x);
 */
 
 int *delete_subarr(int arr_primes[],int arr_remove[], int n,int m);
-bswabe_cph_t* bswabe_enc( bswabe_pub_t* pub, bswabe_msk_t* msk,element_t m, int attrib[]);
+bswabe_cph_t* bswabe_enc( bswabe_pub_t* pub, bswabe_msk_t* msk, char* m, int attrib[]);
 
 int verify(bswabe_verification_t *ver, bswabe_signature_t *signa, bswabe_cph_t *cp, bswabe_pub_t *pub);
 
@@ -124,7 +124,7 @@ void bswabe_proxy(mpz_t k1, mpz_t C_attr, mpz_t C_user);
   satisfy the policy of the ciphertext (in which case m is unaltered).
 */
 int
-bswabe_dec( bswabe_pub_t* pub, bswabe_prv_t* prv, bswabe_cph_t* cph, element_t m);
+bswabe_dec( bswabe_pub_t* pub, bswabe_prv_t* prv, bswabe_cph_t* cph, char* m);
 /*
   Exactly what it seems.
 */
@@ -152,6 +152,7 @@ bswabe_verification_t* bswabe_verification_unserialize( bswabe_pub_t* pub, GByte
 // NEW
 bswabe_pub_t * bswabe_pub_unserialize_new(GByteArray *b, int free);
 bswabe_msk_t *bswabe_msk_unserialize_new(GByteArray *b, int free);
+bswabe_prv_t *bswabe_prv_unserialize_new(GByteArray *b, int free);
 /*
   Again, exactly what it seems.
 */
