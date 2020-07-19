@@ -190,8 +190,7 @@ int main(int argc, char **argv)
 
 
     /* Decrypt the given file */
-    file_encrypt_decrypt(f_input, f_dec, encrypt, KEY, IV);
-
+	aes_cbc_256(f_input, f_enc, encrypt,KEY, IV);
     /* Close the open file descriptors */
     fclose(f_input);
     fclose(f_dec);
