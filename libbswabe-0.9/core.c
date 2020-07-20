@@ -758,7 +758,7 @@ void bswabe_proxy(mpz_t k1, mpz_t C_attr, mpz_t C_user)
     }
 }
 
-int bswabe_dec(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, element_t m) // attrib is P
+int bswabe_dec(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, char* m) // attrib is P
 {
     pairing_t px;
     char *pairing_desc;

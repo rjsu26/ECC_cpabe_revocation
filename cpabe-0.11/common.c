@@ -15,6 +15,11 @@
 #include <string.h>
 #include "common.h"
 
+#define AES_256_KEY_SIZE 32
+#define AES_BLOCK_SIZE 16
+#define BUFSIZE 1024
+
+
 #define TYPE_A_PARAMS                                          \
 	"type a\n"                                                 \
 	"q 87807107996633125224377819847540498158068831994142082"  \
@@ -146,6 +151,78 @@ aes_128_cbc_decrypt(GByteArray *ct, element_t k)
 	g_byte_array_set_size(pt, len);
 	printf("\n Here2 \n");
 	return pt;
+}
+
+void aes_cbc_256(FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned char *key, unsigned char *iv){
+	/* Allow enough space in output buffer for additional block */
+    int cipher_block_size = EVP_CIPHER_block_size(EVP_aes_256_cbc());
+    unsigned char in_buf[BUFSIZE], out_buf[BUFSIZE + cipher_block_size];
+
+    int num_bytes_read, out_len;
+    EVP_CIPHER_CTX *ctx;
+
+    ctx = EVP_CIPHER_CTX_new();
+    if(ctx == NULL){
+        fprintf(stderr, "ERROR: EVP_CIPHER_CTX_new failed. OpenSSL error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        exit(-4);
+    }
+
+    /* Don't set key or IV right away; we want to check lengths */
+    if(!EVP_CipherInit_ex(ctx, EVP_aes_256_cbc(), NULL, NULL, NULL, encrypt)){
+        fprintf(stderr, "ERROR: EVP_CipherInit_ex failed. OpenSSL error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        exit(-1);
+    }
+
+    OPENSSL_assert(EVP_CIPHER_CTX_key_length(ctx) == AES_256_KEY_SIZE);
+    OPENSSL_assert(EVP_CIPHER_CTX_iv_length(ctx) == AES_BLOCK_SIZE);
+
+    /* Now we can set key and IV */
+    if(!EVP_CipherInit_ex(ctx, NULL, NULL, key, iv, encrypt)){
+        fprintf(stderr, "ERROR: EVP_CipherInit_ex failed. OpenSSL error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        EVP_CIPHER_CTX_cleanup(ctx);
+        exit(-1);
+    }
+
+    while(1){
+        // Read in data in blocks until EOF. Update the ciphering with each read.
+        num_bytes_read = fread(in_buf, sizeof(unsigned char), BUFSIZE, ifp);
+        if (ferror(ifp)){
+            fprintf(stderr, "ERROR: fread error: %s\n", strerror(errno));
+            EVP_CIPHER_CTX_cleanup(ctx);
+            exit(-1);
+        }
+     
+	    if(!EVP_CipherUpdate(ctx, out_buf, &out_len, in_buf, num_bytes_read)){
+            fprintf(stderr, "ERROR: EVP_CipherUpdate failed. OpenSSL error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+            EVP_CIPHER_CTX_cleanup(ctx);
+            exit(-2);
+        }
+        fwrite(out_buf, sizeof(unsigned char), out_len, ofp);
+        if (ferror(ofp)) {
+            fprintf(stderr, "ERROR: fwrite error: %s\n", strerror(errno));
+            EVP_CIPHER_CTX_cleanup(ctx);
+            exit(-1);
+        }
+        if (num_bytes_read < BUFSIZE) {
+            /* Reached End of file */
+            break;
+        }
+    }
+
+    /* Now cipher the final block and write it out to file */
+    if(!EVP_CipherFinal_ex(ctx, out_buf, &out_len)){
+        fprintf(stderr, "ERROR: EVP_CipherFinal_ex failed. OpenSSL error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        EVP_CIPHER_CTX_cleanup(ctx);
+        exit(-3);
+    }
+
+    fwrite(out_buf, sizeof(unsigned char), out_len, ofp);
+    if (ferror(ofp)) {
+        fprintf(stderr, "ERROR: fwrite error: %s\n", strerror(errno));
+        EVP_CIPHER_CTX_cleanup(ctx);
+        exit(-1);
+    }
+    EVP_CIPHER_CTX_cleanup(ctx);
 }
 
 FILE *

@@ -1,13 +1,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <glib.h>
-#include <pbc.h>
-#include <pbc_random.h>
 
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <openssl/err.h>
 #include <time.h>
 #include <openssl/bn.h>
 
@@ -22,15 +21,7 @@ char *usage =
 	"PUB_KEY. The encrypted file will be written to FILE.cpabe unless\n"
 	"the -o option is used. The original file will be removed. If POLICY\n"
 	"is not specified, the policy will be read from stdin.\n"
-	"\n"
-	"Mandatory arguments to long options are mandatory for short options too.\n\n"
-	" -h, --help               print this message\n\n"
-	" -v, --version            print version information\n\n"
-	" -k, --keep-input-file    don't delete original file\n\n"
-	" -o, --output FILE        write resulting key to FILE\n\n"
-	" -d, --deterministic      use deterministic \"random\" numbers\n"
-	"                          (only for debugging)\n\n"
-	"";
+	"\n";
 
 char *pub_file = 0;
 char *msk_file = "master_key";
@@ -124,10 +115,10 @@ int main(int argc, char **argv)
 	bswabe_cph_t *cph;
 	bswabe_msk_t *msk;
 	int file_len;
-	GByteArray *plt;
+	// GByteArray *plt;
 	GByteArray *cph_buf;
 	GByteArray *aes_buf;
-	element_t m;
+	// element_t m;
 	clock_t t1, t2;
 	float diff;
 
@@ -145,36 +136,68 @@ int main(int argc, char **argv)
 		else
 			attributes[i] = 0;
 
-	BN_CTX *ctx = BN_CTX_new();
-    BIGNUM *key = BN_new();
-    BN_rand(key,256,-1,1); 
+	// Do AES encryption of input file
 
-	unsigned char *M;
-	strcpy(M, (char *)BN_bn2dec(key));
-	strcpy(M, (char *)'\n');
-    BN_rand(key,128,-1,1); 
-	strcpy(M, (char *)BN_bn2dec(key));
+	/* Key to use for encrpytion and decryption */
+    unsigned char key[32];
+    /* Initialization Vector */
+    unsigned char iv[16];
+    /* Generate cryptographically strong pseudo-random bytes for key and IV */
+    if (!RAND_bytes(key, sizeof(key)) || !RAND_bytes(iv, sizeof(iv))) {
+        /* OpenSSL reports a failure, act accordingly */
+        fprintf(stderr, "ERROR: RAND_bytes error: %s\n", strerror(errno));
+        return errno;
+    }
+	unsigned char *KEY = key;
+    unsigned char *IV = iv;
+    unsigned int encrypt = 1;
 	
-	if (!(cph = bswabe_enc(pub, msk, m, attributes)))
+	/* Open the input file for reading in binary ("rb" mode) */
+    FILE *f_input = fopen(in_file, "rb");
+    if (!f_input) {
+        /* Unable to open file for reading */
+        fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
+        return errno;
+    }
+    /* Open and truncate file to zero length or create ciphertext file for writing */
+	FILE *f_enc = fopen(out_file, "wb");
+    if (!f_enc) {
+        /* Unable to open file for writing */
+        fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
+        return errno;
+    }
+	// AES encrypt the in_file and save it to out_file. The out_file will be sucked again for cpabe work. 
+	aes_cbc_256(f_input, f_enc, encrypt,KEY, IV); 
+
+	// generate the concatenated string of key and IV
+	char *M = (char*)malloc( strlen(KEY)+1+strlen(IV)); // KEY + " " + IV
+	strcpy(M,KEY);
+    strcat(M, " ");
+    strcat(M, IV);
+
+	// encrypt the message M
+	if (!(cph = bswabe_enc(pub, msk, M, attributes)))
 		die("%s", bswabe_error());
-		
+	
+	// serialize the ciphertext parameters
 	cph_buf = bswabe_cph_serialize(cph);
-	//bswabe_cph_free(cph);
-	// printf("\n after cph_serialize");
+	bswabe_cph_free(cph);
 
-	plt = suck_file(in_file);
-	file_len = plt->len;
-	aes_buf = aes_128_cbc_encrypt(plt, m);
-	g_byte_array_free(plt, 1);
+	aes_buf = suck_file(out_file); // re-reading the aes-encrypted file
+	file_len = aes_buf->len;
+	// aes_buf = aes_128_cbc_encrypt(plt, m);
+	// g_byte_array_free(plt, 1);
 	// element_clear(m);
-
+	
+	// Write the cph_buf, a new line and then aes_buffer to the out_file
+	// CHANGE THIS FUNCTION ACCORDINGLY 
 	write_cpabe_file(out_file, cph_buf, file_len, aes_buf);
 
 	g_byte_array_free(cph_buf, 1);
 	g_byte_array_free(aes_buf, 1);
 	t2 = clock();
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
-	printf("\nTime taken in seconds=%f", diff);
+	printf("\nTime taken in seconds=%f\n", diff);
 
 	if (!keep)
 		unlink(in_file);

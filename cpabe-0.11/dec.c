@@ -126,7 +126,8 @@ int main(int argc, char **argv)
 	GByteArray *plt;
 	GByteArray *cph_buf;
 	bswabe_cph_t *cph;
-	element_t m1;
+	// element_t m1;
+	char* M;
 	clock_t t1, t2;
 	float diff;
 
@@ -135,15 +136,18 @@ int main(int argc, char **argv)
 
 	parse_args(argc, argv);
 	printf("\nBefore pub unserialize");
-	pub = bswabe_pub_unserialize(suck_file(pub_file), 1);
+	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
 	//gmp_printf("\nAfter PUB unserialize %Zd #####", pub->n);
-	prv = bswabe_prv_unserialize(pub, suck_file(prv_file), 1);
-	read_cpabe_file(in_file, &cph_buf, &file_len, &aes_buf);
-	printf("\nAfter reading cpabe_file");
 
+	prv = bswabe_prv_unserialize_new( suck_file(prv_file), 1);
+
+	// Read cph and aes buffer from cpabe file in order. CHANGE FUNCTION ACCORDINGLY
+	read_cpabe_file(in_file, &cph_buf, &file_len, &aes_buf);
+	// Use spit_file again to just replace the whole file with just aes_buf, so that aes_cbs_encrypt function can work upon it directly.
 	cph = bswabe_cph_unserialize(pub, cph_buf, 1);
-	printf("\nAfter cph_unserialize");
-	if (!bswabe_dec(pub, prv, cph, m1))
+
+	// Obtain decrypted value of AES key and iv
+	if (!bswabe_dec(pub, prv, cph, M))
 	{
 		t2 = clock();
 		diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
@@ -151,34 +155,61 @@ int main(int argc, char **argv)
 		printf("Unable to Decrypt. Exiting !!!\n");
 		die("%s", bswabe_error());
 	}
+
 	t2 = clock();
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
 	printf("\nTime taken in seconds af=%f", diff);
-	////////
-	printf("\nAfter bswabe_dec\n");
-	bswabe_cph_free(cph);
-	printf("\ncph\n");
+	// printf("\nAfter bswabe_dec\n");
+	// bswabe_cph_free(cph);
+	// printf("\ncph\n");
+	// element_printf("\n Value of m in dec =%B \n", m1);
 
-	element_printf("\n Value of m in dec =%B \n", m1);
 
-	plt = aes_128_cbc_decrypt(aes_buf, m1);
-	printf("\n plt \n");
+	// Extracting key and iv from char* M
+	char* delim=" ";
+    char *ptr = strtok(M, delim);
+    char* KEY=ptr;
+    ptr = strtok(NULL, delim);
+    char* IV = ptr;
 
-	g_byte_array_set_size(plt, file_len);
-	printf("\n size \n");
+    /* Open the encrypted file for reading in binary ("rb" mode) */
+    FILE *f_input = fopen(in_file, "rb");
+	    if (!f_input) {
+        /* Unable to open file for reading */
+        fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
+        return errno;
+    }
+
+    /* Open and truncate file to zero length or create decrypted file for writing */
+    f_dec = fopen(out_file, "wb");
+    if (!f_dec) {
+        /* Unable to open file for writing */
+        fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
+        return errno;
+    }
+
+
+    /* Decrypt the given file */
+	aes_cbc_256(f_input, f_enc, encrypt,KEY, IV);
+    /* Close the open file descriptors */
+    fclose(f_input);
+    fclose(f_dec);
+
+	// plt = aes_128_cbc_decrypt(aes_buf, m1);
+
+	// g_byte_array_set_size(plt, file_len);
+	// printf("\n size \n");
 
 	g_byte_array_free(aes_buf, 1);
-	printf("\n free \n");
+	// printf("\n free \n");
 
-	spit_file(out_file, plt, 1);
-	printf("\nspit\n");
-
+	// spit_file(out_file, plt, 1);
 	t2 = clock();
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
-	printf("\nTime taken in seconds=%f", diff);
+	printf("\nTime taken in seconds=%f\n", diff);
 
 	if (!keep)
 		unlink(in_file);
-	printf("\nunlink\n");
+	
 	return 0;
 }
