@@ -425,6 +425,34 @@ EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIG
 
     return curve;
 }
+void multi(unsigned long long int *arr,int n,int a) {
+  //mul with x
+  unsigned long long int *temp = (unsigned long long int*)calloc(n+1,sizeof(unsigned long long int));
+  for(int i=n;i>=0;i--){
+    temp[i] = arr[i]*a;
+  }
+  for(int i=n-1;i>=0;i--) {
+    arr[i+1] = arr[i];
+  }
+  arr[0] = 0;
+  for(int i=0;i<=n;i++) {
+    arr[i] = arr[i] + temp[i];
+  }
+  free(temp);
+}
+unsigned long long int coefficients(int pol[],int n) {
+  unsigned long long int *poly = (unsigned long long int*)calloc(n+1,sizeof(unsigned long long int));
+  for(int i=0;i<=n;i++) {
+    poly[i] = 0;
+  }
+  poly[0]=1;
+  for(int i=0;i<n;i++) {
+    if(pol[i]==0){
+      multi(poly,n,hash_4(i+1));
+    }
+  }
+  return poly;
+}
 
 void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
 {
@@ -550,7 +578,7 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
     for(int i=0;i<pub->n;i++) {
         BN_mul_word(pol,10);
         BN_add_word(pol,attributes[i]);
-    } 
+    }
 
     // message M
     BIGNUM *M = BN_new();
@@ -561,7 +589,7 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
 
     // generating sigma of 3 bit
     BIGNUM *sigma = BN_new();
-    BN_rand(sigma,3,0,0);
+    BN_rand(sigma,3,0,0);    
     //calculating r_m
     BIGNUM *r_m = BN_new();
     char *sol;
@@ -569,6 +597,35 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
     //computing hash of sol for r_m
     compute_hash(r_m,sol);
     BN_mod(r_m,r_m,pub->p,ctx);
+
+    // calculating polynomial of f(x,policy)
+
+    unsigned long long int *polynomial = coefficients(attributes,pub->n);
+
+    //
+    EC_POINT *k1m = EC_POINT_new(curve);
+    EC_POINT *k2m = EC_POINT_new(curve);
+    EC_POINT *temp_pt = EC_POINT_new(curve);
+    //
+    EC_POINT_set_to_infinity(curve,k1m);
+    EC_POINT_set_to_infinity(curve,k2m);
+    //
+    BIGNUM *fi = BN_new();
+    for(int i=0;i<=n;i++) {
+        BN_set_word(fi,poly[i]);
+        EC_POINT_mul(curve,temp_pt,NULL,pub->U_i[i],fi,ctx);
+        EC_POINT_add(curve,k1m,k1m,temp_pt,ctx);
+    }
+    for(int i=0;i<=n;i++) {
+        BN_set_word(fi,poly[i]);
+        EC_POINT_mul(curve,temp_pt,NULL,pub->V_i[i],fi,ctx);
+        EC_POINT_add(curve,k2m,k2m,temp_pt,ctx);
+    }
+
+    EC_POINT_mul(curve,k1m,NULL,k1m,r_m,ctx);
+    EC_POINT_mul(curve,k2m,NULL,k2m,r_m,ctx);
+
+
     //calculating f(alpha)
     BIGNUM *f_alpha =  f(msk->alpha,attributes,pub->n);
 
@@ -594,7 +651,7 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
     char *pass1,*pass2;
     pass1=(char*)BN_bn2dec(x);
     pass2=(char*)BN_bn2dec(y);
-    int B = 2;
+    int B = 2;    
     unsigned char *pass = (unsigned char*)calloc(200,sizeof(unsigned char)) ;
     unsigned char *out = (unsigned char*)calloc(B,sizeof(unsigned char));
     strcpy(pass,"(");
@@ -621,14 +678,14 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
       BN_add_word(K_m,temp_out[i]);
     }
     //calculating k1m and k2m
-    EC_POINT *K1m = EC_POINT_new(curve);
-    EC_POINT *K2m = EC_POINT_new(curve);
+    // EC_POINT *K1m = EC_POINT_new(curve);
+    // EC_POINT *K2m = EC_POINT_new(curve);
 
-    EC_POINT *temp = EC_POINT_new(curve);
-    EC_POINT_mul(curve,temp,NULL,r_m_P,f_alpha,ctx);
+    // EC_POINT *temp = EC_POINT_new(curve);
+    // EC_POINT_mul(curve,temp,NULL,r_m_P,f_alpha,ctx);
 
-    EC_POINT_mul(curve,K1m,NULL,temp,k1,ctx);
-    EC_POINT_mul(curve,K2m,NULL,temp,k2,ctx);
+    // EC_POINT_mul(curve,K1m,NULL,temp,k1,ctx);
+    // EC_POINT_mul(curve,K2m,NULL,temp,k2,ctx);
 
     //computing cypher text
 
@@ -650,8 +707,8 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
     // seting values of   k1m , k2m , policy , c_sigma_m and c_m in cipher text
     cph->C_m = C_m;
     cph->C_sigma_m = C_sigma;
-    cph->K_1m = K1m;
-    cph->K_2m = K2m;
+    cph->K_1m = k1m;
+    cph->K_2m = k2m;
 
     for (int i=0;i<pub->n;i++) {
         cph->Policy[i] = attributes[i];
@@ -758,7 +815,7 @@ void bswabe_proxy(mpz_t k1, mpz_t C_attr, mpz_t C_user)
     }
 }
 
-int bswabe_dec(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, char* m) // attrib is P
+int bswabe_dec(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, element_t m) // attrib is P
 {
     pairing_t px;
     char *pairing_desc;
