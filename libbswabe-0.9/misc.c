@@ -252,7 +252,6 @@ bswabe_pub_t *bswabe_pub_unserialize_new(GByteArray *b, int free){
 	pub->b = BN_dup(temp);
 	// BN_copy(pub->b, temp);
 
-	// DEBUG(__LINE__);
 	char_arr = unserialize_string_new(b,&offset); // order
 	BN_hex2bn(&temp, char_arr);
 	// printf("\n%s\n", char_arr);
@@ -278,16 +277,17 @@ bswabe_pub_t *bswabe_pub_unserialize_new(GByteArray *b, int free){
 
 	for(int i=0;i<pub->n;i++){ // for P_i[ ]
 		char_arr = unserialize_string_new(b,&offset); 
-    	EC_POINT_hex2point(curve, char_arr, pub->P_i[i], ctx);
+    	pub->P_i[i] = EC_POINT_hex2point(curve, char_arr, pub->P_i[i], ctx);
 	}
 
 	for(int i=0;i<pub->n;i++){ // for U_i[i]
 		char_arr = unserialize_string_new(b,&offset); 
-    	EC_POINT_hex2point(curve, char_arr, pub->U_i[i], ctx);
+    	pub->U_i[i] = EC_POINT_hex2point(curve, char_arr, pub->U_i[i], ctx);
+
 	}
 	for(int i=0;i<pub->n;i++){  // for V_i[i]
 		char_arr = unserialize_string_new(b,&offset); 
-    	EC_POINT_hex2point(curve, char_arr, pub->V_i[i], ctx);
+    	pub->V_i[i]=EC_POINT_hex2point(curve, char_arr, pub->V_i[i], ctx);
 	}
 	
 	// BN_CTX_free(ctx);

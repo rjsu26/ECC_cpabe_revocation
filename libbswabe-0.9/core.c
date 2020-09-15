@@ -70,7 +70,7 @@ int isPrime(int x)
 {
 
     int i;
-    for (i = 2; i < x; i++)
+    for (i = 2; i*i <= x; i++)
     {
         if (x % i == 0)
         {
@@ -149,17 +149,27 @@ void concatenate(char ans[], char *s1, char *s2, char *s3)
     return;
 }
 
-char* take_Concatenate( BIGNUM *m1, BIGNUM *m2, BIGNUM *m3)
+// old : to be deleted later
+void take_Concatenate(char sol[], mpz_t m1, mpz_t m2, mpz_t m3){
+    return;
+}
+
+char* take_Concatenate_new( BIGNUM *m1, BIGNUM *m2, BIGNUM *m3)
 {
 
     char *s1;
     char *s2;
     char *s3;
-
+    // DEBUG(__LINE__);
     s1 = BN_bn2dec(m1);
     s2 = BN_bn2dec(m2);
     s3 = BN_bn2dec(m3);
-
+    // BN_print_fp(stdout, m1); printf("\n");
+    // printf("%s \n", s1);
+    // BN_print_fp(stdout, m2); printf("\n");
+    // printf("%s \n", s2);
+    // BN_print_fp(stdout, m3); printf("\n");
+    // printf("%s \n", s3);
 
     char *ans = (char*)calloc(500,sizeof(char)) ;
     strcpy(ans,s1);
@@ -215,8 +225,12 @@ char* take_Concatenate( BIGNUM *m1, BIGNUM *m2, BIGNUM *m3)
     // }
 }
 
+// old function re-wrote to remove compilation error
+void compute_hash(mpz_t hash, char str[]){
+    return;
+}
 
-void compute_hash(BIGNUM *hash, char *str)
+void compute_hash_new(BIGNUM *hash, char *str)
 {
     BN_CTX *ctx = BN_CTX_new();
     BIGNUM *p = BN_new();
@@ -252,7 +266,14 @@ void compute_hash(BIGNUM *hash, char *str)
     return;
 }
 
-void compute_hash2(BIGNUM *hash, BIGNUM *x)
+// old function re-wrote to remove compilation error
+unsigned long int generate_random(mpz_t rand_Num,int limit){
+    unsigned long int x=0;
+    return x;
+}
+
+// NEW
+void compute_hash2_new(BIGNUM *hash, BIGNUM *x)
 {
     BN_CTX *ctx = BN_CTX_new();
     BIGNUM *num = BN_new();
@@ -287,9 +308,11 @@ void compute_hash2(BIGNUM *hash, BIGNUM *x)
         BN_div_word(num,10);
     }
 }
+
 unsigned long int hash_4(unsigned long int i) {
   return i;
 }
+
 int *delete_subarr(int arr_primes[], int arr_remove[], int n, int m)
 {
     // int arr_remove[m]; // size = m
@@ -317,6 +340,7 @@ int *delete_subarr(int arr_primes[], int arr_remove[], int n, int m)
     return ans_array;
 }
 BIGNUM *f(BIGNUM *x,int *attributes,int n) {
+  DEBUG(__LINE__);
   BN_CTX *ctx = BN_CTX_new();
   BIGNUM *res = BN_new();
   BN_one(res);
@@ -331,6 +355,7 @@ BIGNUM *f(BIGNUM *x,int *attributes,int n) {
       BN_add_word(tmp,temp);
       BN_mul(res,res,tmp,ctx);
     }
+  DEBUG(__LINE__);
   }
   BN_CTX_free(ctx);
   return res;
@@ -411,7 +436,7 @@ EC_GROUP *create_curve(BIGNUM* a,BIGNUM* b,BIGNUM* p,BIGNUM* order,BIGNUM* x,BIG
     BN_CTX *ctx;
     ctx = BN_CTX_new();
     EC_GROUP *curve;
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
     curve = EC_GROUP_new_curve_GFp(p, a, b, ctx);
     EC_POINT *generator;
     //DEBUG(__LINE__);
@@ -557,81 +582,123 @@ void bswabe_setup(bswabe_pub_t **mpk, bswabe_msk_t **msk, int n)
     return;
 }
 
+// old: to be deleted
+bswabe_cph_t* bswabe_enc( bswabe_pub_t* pub, bswabe_msk_t* msk, char* m, int attrib[]){
+    bswabe_cph_t * cph  = (bswabe_cph_t*)malloc(sizeof(bswabe_cph_t));
+    return cph;
+}
+
+
+// NEW
 bswabe_cph_t *
-bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
+bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[])
 {
 
-    //#######################################ODELU####################################################
-    // pairing_t px;
-    // char *pairing_desc;
-    // pairing_desc = strdup(TYPE_A_PARAMS);
-    // pairing_init_set_buf(px, pairing_desc, strlen(pairing_desc));
-    // element_init_GT(m, px);
-    // element_random(m);
-    // element_printf("%B", m);
 
     BN_CTX *ctx = BN_CTX_new();
     // making policy ready for concatenation
 
+    //creating curve
+    EC_GROUP *curve = create_curve(pub->a,pub->b,pub->p,pub->order,pub->G_x,pub->G_y);
+
     BIGNUM *pol = BN_new();
     BN_zero(pol);
+    // BN_print_fp(stdout, pol);printf("\n");
     for(int i=0;i<pub->n;i++) {
         BN_mul_word(pol,10);
         BN_add_word(pol,attributes[i]);
     }
 
+    // DEBUG(__LINE__);
+    // BN_print_fp(stdout, pol);printf("\n");
     // message M
-    BIGNUM *M = BN_new();
-    BN_dec2bn(&M,m);
+    // BIGNUM *M = BN_new();
+    // BN_dec2bn(&M,m);
+    // for(int i=0;i<32;i++){
+    //     printf("%d ", m[i] );
+    // }
+    // printf("\n");
 
+    // BIGNUM *M= BN_bin2bn(m, sizeof(m), NULL);
+    // BN_print_fp(stdout, M);printf("\n");
+    unsigned char *to = malloc((BN_num_bytes(M) +1)*sizeof(char));
+    BN_bn2bin(M, to);
+    // for(int i=0;i<32;i++){
+    //     printf("%d ", to[i] );
+    // }
+    // printf("\n");
     //BN_rand(M,4,0,0);
 
 
     // generating sigma of 3 bit
     BIGNUM *sigma = BN_new();
-    BN_rand(sigma,3,0,0);    
+    BN_rand(sigma,3,0,0);
     //calculating r_m
     BIGNUM *r_m = BN_new();
     char *sol;
-    sol = take_Concatenate(pol,M,sigma);
+    sol = take_Concatenate_new(pol,M,sigma);
+    DEBUG(__LINE__);
+    // printf("%s \n", sol);
     //computing hash of sol for r_m
-    compute_hash(r_m,sol);
+    compute_hash_new(r_m,sol);
     BN_mod(r_m,r_m,pub->p,ctx);
+    // DEBUG(__LINE__);
+    // BN_print_fp(stdout, r_m); printf("\n");
 
     // calculating polynomial of f(x,policy)
 
     unsigned long long int *polynomial = coefficients(attributes,pub->n);
 
-    //
+    // for(int i=0;i<=pub->n;i++) printf("%d ", polynomial[i]);
+    // printf("\n");
+
+
     EC_POINT *k1m = EC_POINT_new(curve);
     EC_POINT *k2m = EC_POINT_new(curve);
     EC_POINT *temp_pt = EC_POINT_new(curve);
     //
-    EC_POINT_set_to_infinity(curve,k1m);
-    EC_POINT_set_to_infinity(curve,k2m);
-    //
-    BIGNUM *fi = BN_new();
-    for(int i=0;i<=n;i++) {
-        BN_set_word(fi,poly[i]);
-        EC_POINT_mul(curve,temp_pt,NULL,pub->U_i[i],fi,ctx);
-        EC_POINT_add(curve,k1m,k1m,temp_pt,ctx);
+    if(EC_POINT_set_to_infinity(curve,k1m)!=1){
+        DEBUG(__LINE__);
+        printf("Unable to set at infinity 1\n");
     }
-    for(int i=0;i<=n;i++) {
-        BN_set_word(fi,poly[i]);
+    if(EC_POINT_set_to_infinity(curve,k2m)!=1){
+        DEBUG(__LINE__);
+        printf("Unable to set at infinity 2\n");
+    }
+    //
+    BIGNUM *x1 = BN_new();
+    BIGNUM *y1 = BN_new();
+    BIGNUM *fi = BN_new();
+
+    // printf("Inside Loop 1: \n");
+    for(int i=0;i<=pub->n;i++) {
+        BN_set_word(fi,polynomial[i]);
+        EC_POINT_mul(curve, temp_pt, NULL, pub->U_i[i], fi, ctx);
+        EC_POINT_add(curve, k1m,   k1m,  temp_pt,   ctx);
+    }
+    // printf("Inside Loop 2: \n");
+    for(int i=0;i<=pub->n;i++) {
+        BN_set_word(fi,polynomial[i]);
+        // printf(" i = %d fi = ", i); 
+        // BN_print_fp(stdout, fi); printf("\n");
         EC_POINT_mul(curve,temp_pt,NULL,pub->V_i[i],fi,ctx);
         EC_POINT_add(curve,k2m,k2m,temp_pt,ctx);
     }
 
-    EC_POINT_mul(curve,k1m,NULL,k1m,r_m,ctx);
-    EC_POINT_mul(curve,k2m,NULL,k2m,r_m,ctx);
+    EC_POINT_mul(curve,k1m,NULL,k1m, r_m,ctx);
+    EC_POINT_mul(curve,k2m,NULL,k2m, r_m,ctx);
+        // EC_POINT_get_affine_coordinates(curve, temp_pt, x1, y1, NULL);
+        // BN_print_fp(stdout, x1);
+        // putc('\n', stdout);
+        // BN_print_fp(stdout, y1);
+        // putc('\n', stdout);
 
 
     //calculating f(alpha)
-    BIGNUM *f_alpha =  f(msk->alpha,attributes,pub->n);
+    BIGNUM *f_alpha = BN_new();
+    BN_zero(f_alpha);
+    f(msk->alpha,attributes,pub->n);
 
-    //creating curve
-
-    EC_GROUP *curve = create_curve(pub->a,pub->b,pub->p,pub->order,pub->G_x,pub->G_y);
 
 
     // rmp
@@ -699,8 +766,8 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
 
     char *temp2 = BN_bn2dec(K_m);
 
-    compute_hash(H2_km,temp2);
-    compute_hash2(H3_sigma,sigma);
+    compute_hash_new(H2_km,temp2);
+    compute_hash2_new(H3_sigma,sigma);
 
     BN_GF2m_add(C_sigma,H2_km,sigma);
     BN_GF2m_add(C_m,H3_sigma,M);
@@ -734,6 +801,7 @@ bswabe_enc(bswabe_pub_t *pub, bswabe_msk_t *msk, char *m, int attributes[])
 
 bswabe_prv_t *bswabe_keygen(bswabe_prv_t** prv, bswabe_pub_t *pub, bswabe_msk_t *msk, int user_attr_set[])
 {
+    // DEBUG(__LINE__);
     BN_CTX *ctx ;
     if (NULL == (ctx = BN_CTX_new()))
         printf("error\n");
@@ -815,7 +883,7 @@ void bswabe_proxy(mpz_t k1, mpz_t C_attr, mpz_t C_user)
     }
 }
 
-int bswabe_dec(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, element_t m) // attrib is P
+int bswabe_dec(bswabe_pub_t* pub, bswabe_prv_t* prv, bswabe_cph_t* cph, char* m) // attrib is P
 {
     pairing_t px;
     char *pairing_desc;
@@ -929,8 +997,8 @@ int bswabe_dec(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, element_
     char str1[10000];
     //take_Concatenate(str1,K_m,blank1,blank2);
     mpz_get_str(str1, 10, K_m);
-    //printf("hello i am  == %s", str1);
-    compute_hash(H2_K_m, str1);
+    printf("hello i am  == %s", str1);
+    // compute_hash(H2_K_m, str1);
 
     mpz_xor(sigma_d_m, H2_K_m, cph->C_sigma);
     gmp_printf("value of sigma_d_m = %Zd", sigma_d_m);
@@ -939,7 +1007,7 @@ int bswabe_dec(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, element_
 
     //take_Concatenate(str2,sigma_d_m,blank1,blank2);
     int str2 = mpz_get_ui(sigma_d_m);
-    compute_hash2(H3_sigma_m, str2);
+    // compute_hash2(H3_sigma_m, str2);
 
     mpz_xor(M_d, cph->C_m, H3_sigma_m);
 
@@ -958,7 +1026,7 @@ int bswabe_dec(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, element_
 
     unsigned long int final_ans = sigma_v * 100 + M_v;
     printf("\n\n str3 is %s\n\n", str3);
-    compute_hash2(H1, final_ans);
+    // compute_hash2(H1, final_ans);
 
     if (mpz_cmp(cph->S_m, H1) == 0)
     {

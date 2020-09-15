@@ -61,13 +61,19 @@ bswabe_prv_t* bswabe_keygen( bswabe_prv_t** prv,bswabe_pub_t* pub,
                              bswabe_msk_t* msk,
                               int user_attr_set[]);
 
+void take_Concatenate(char sol[], mpz_t m1, mpz_t m2, mpz_t m3);
 void compute_hash2(mpz_t hash,unsigned long int x);
 
 void compute_hash(mpz_t hash,char str[]) ;
 
 unsigned long int generate_random(mpz_t rand_Num,int limit);
 
-void take_Concatenate(char sol[], mpz_t m1, mpz_t m2, mpz_t m3);
+
+// NEW
+char* take_Concatenate_new( BIGNUM *m1, BIGNUM *m2, BIGNUM *m3);
+void compute_hash_new(BIGNUM *hash, char *str);
+void compute_hash2_new(BIGNUM *hash, BIGNUM *x);
+
 
 void concatenate(char ans[],char* s1, char* s2, char* s3);
 
@@ -102,6 +108,11 @@ int isPrime(int x);
 int *delete_subarr(int arr_primes[],int arr_remove[], int n,int m);
 bswabe_cph_t* bswabe_enc( bswabe_pub_t* pub, bswabe_msk_t* msk, char* m, int attrib[]);
 
+// NEw 
+bswabe_cph_t *
+bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]);
+BIGNUM *f(BIGNUM *x,int *attributes,int n);
+
 int verify(bswabe_verification_t *ver, bswabe_signature_t *signa, bswabe_cph_t *cp, bswabe_pub_t *pub);
 
 bswabe_signature_t* sign(bswabe_sig_t *sig, bswabe_cph_t *cp, bswabe_pub_t *pub);
@@ -123,8 +134,7 @@ void bswabe_proxy(mpz_t k1, mpz_t C_attr, mpz_t C_user);
   Returns true if decryption succeeded, false if this key does not
   satisfy the policy of the ciphertext (in which case m is unaltered).
 */
-int
-bswabe_dec( bswabe_pub_t* pub, bswabe_prv_t* prv, bswabe_cph_t* cph, char* m);
+int bswabe_dec( bswabe_pub_t* pub, bswabe_prv_t* prv, bswabe_cph_t* cph, char* m);
 /*
   Exactly what it seems.
 */

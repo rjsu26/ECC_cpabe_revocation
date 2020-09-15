@@ -13,7 +13,16 @@
 #include <openssl/sha.h>
 #include <pbc.h>
 #include <string.h>
+
+#include <errno.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
+#include <openssl/rand.h>
+
 #include "common.h"
+
+#define DEBUG(arg) printf("file %s Line #%d\n", __FILE__, arg);
+
 
 #define AES_256_KEY_SIZE 32
 #define AES_BLOCK_SIZE 16
@@ -154,10 +163,12 @@ aes_128_cbc_decrypt(GByteArray *ct, element_t k)
 }
 
 void aes_cbc_256(FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned char *key, unsigned char *iv){
+
 	/* Allow enough space in output buffer for additional block */
     int cipher_block_size = EVP_CIPHER_block_size(EVP_aes_256_cbc());
     unsigned char in_buf[BUFSIZE], out_buf[BUFSIZE + cipher_block_size];
-
+	// printf("key = %s\nIV = %s\n", key, iv);
+	
     int num_bytes_read, out_len;
     EVP_CIPHER_CTX *ctx;
 
@@ -186,6 +197,8 @@ void aes_cbc_256(FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned char *key, 
     while(1){
         // Read in data in blocks until EOF. Update the ciphering with each read.
         num_bytes_read = fread(in_buf, sizeof(unsigned char), BUFSIZE, ifp);
+		// printf("input buffer size: %d\n", num_bytes_read);
+
         if (ferror(ifp)){
             fprintf(stderr, "ERROR: fread error: %s\n", strerror(errno));
             EVP_CIPHER_CTX_cleanup(ctx);
@@ -197,7 +210,9 @@ void aes_cbc_256(FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned char *key, 
             EVP_CIPHER_CTX_cleanup(ctx);
             exit(-2);
         }
+
         fwrite(out_buf, sizeof(unsigned char), out_len, ofp);
+
         if (ferror(ofp)) {
             fprintf(stderr, "ERROR: fwrite error: %s\n", strerror(errno));
             EVP_CIPHER_CTX_cleanup(ctx);
@@ -217,6 +232,7 @@ void aes_cbc_256(FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned char *key, 
     }
 
     fwrite(out_buf, sizeof(unsigned char), out_len, ofp);
+	// printf("out buff : %s\n", out_buf);
     if (ferror(ofp)) {
         fprintf(stderr, "ERROR: fwrite error: %s\n", strerror(errno));
         EVP_CIPHER_CTX_cleanup(ctx);

@@ -80,7 +80,8 @@ int main(int argc, char **argv)
 	// DEBUG(__LINE__);
 	//printf("\n before call \n");
 	printf("\nEnter no of attributes in system(1-100) : ");
-	scanf("%d", &n); printf("\n");
+	scanf("%d", &n);
+	//  printf("\n");
 	if (n<=0 || n>100){
 		printf("Number of attributes incorrect. Retry..\n");
 		return 0;
@@ -92,6 +93,6 @@ int main(int argc, char **argv)
 
 	t2 = clock();
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
-	printf("\nTime taken in seconds=%f", diff);
+	printf("\nTime taken = %f seconds \n\n", diff);
 	return 0;
 }
