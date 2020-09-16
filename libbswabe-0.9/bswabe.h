@@ -148,7 +148,7 @@ GByteArray* bswabe_verification_serialize( bswabe_verification_t * ver );
 GByteArray *bswabe_pub_serialize_new(bswabe_pub_t *pub);
 GByteArray * bswabe_msk_serialize_new(bswabe_msk_t *msk);
 GByteArray *bswabe_prv_serialize_new(bswabe_prv_t *prv);
-
+GByteArray *bswabe_cph_serialize_new(bswabe_cph_t *cph, int n,bswabe_pub_t *pub);
 /*
   Also exactly what it seems. If free is true, the GByteArray passed
   in will be free'd after it is read.
@@ -163,6 +163,7 @@ bswabe_verification_t* bswabe_verification_unserialize( bswabe_pub_t* pub, GByte
 bswabe_pub_t * bswabe_pub_unserialize_new(GByteArray *b, int free);
 bswabe_msk_t *bswabe_msk_unserialize_new(GByteArray *b, int free);
 bswabe_prv_t *bswabe_prv_unserialize_new(GByteArray *b, int free);
+bswabe_cph_t* bswabe_cph_unserialize_new( bswabe_pub_t* pub, GByteArray* b, int free );
 /*
   Again, exactly what it seems.
 */

@@ -230,13 +230,18 @@ int main(int argc, char **argv)
 		die("%s", bswabe_error());
 	
 	// serialize the ciphertext parameters
-	DEBUG(__LINE__);
-	cph_buf = bswabe_cph_serialize(cph);
-	bswabe_cph_free(cph);
+	// DEBUG(__LINE__);
+
+	cph_buf = bswabe_cph_serialize_new(cph, n, pub);
+	// DEBUG(__LINE__);
+	// bswabe_cph_free(cph);
+	// DEBUG(__LINE__);
 
 	aes_buf = suck_file(out_file); // re-reading the aes-encrypted file
+	// DEBUG(__LINE__);
 	file_len = aes_buf->len;
 	// aes_buf = aes_128_cbc_encrypt(plt, m);
+	// DEBUG(__LINE__);
 	// g_byte_array_free(plt, 1);
 	// element_clear(m);
 	
@@ -244,6 +249,7 @@ int main(int argc, char **argv)
 	// CHANGE THIS FUNCTION ACCORDINGLY 
 	write_cpabe_file(out_file, cph_buf, file_len, aes_buf);
 
+	DEBUG(__LINE__);
 	g_byte_array_free(cph_buf, 1);
 	g_byte_array_free(aes_buf, 1);
 	t2 = clock();

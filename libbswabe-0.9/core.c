@@ -688,31 +688,32 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     EC_POINT_mul(curve,k1m,NULL,k1m, r_m,ctx);
     EC_POINT_mul(curve,k2m,NULL,k2m, r_m,ctx);
         // EC_POINT_get_affine_coordinates(curve, temp_pt, x1, y1, NULL);
-        // BN_print_fp(stdout, x1);
-        // putc('\n', stdout);
-        // BN_print_fp(stdout, y1);
-        // putc('\n', stdout);
 
 
     //calculating f(alpha)
-    BIGNUM *f_alpha = BN_new();
-    BN_zero(f_alpha);
-    f(msk->alpha,attributes,pub->n);
+    // BIGNUM *f_alpha = BN_new();
+    // BN_zero(f_alpha);
+    // f(msk->alpha,attributes,pub->n);
+
 
 
 
     // rmp
-
     EC_POINT *r_m_P = EC_POINT_new(curve);
     if (1 != EC_POINT_mul(curve, r_m_P, r_m, NULL, NULL, ctx)) 
         handleErrors(__LINE__);
     
+
+
     // getting coordinates of r_m_P
-
-
     BIGNUM *x = BN_new();
     BIGNUM *y = BN_new();
-    EC_POINT_get_affine_coordinates_GFp(curve,r_m_P,x,y,ctx);
+    EC_POINT_get_affine_coordinates(curve,r_m_P,x,y,ctx);
+    // BN_print_fp(stdout, x);
+    // putc('\n', stdout);
+    // BN_print_fp(stdout, y);
+    // putc('\n', stdout);
+    // DEBUG(__LINE__);
 
     //
     char *pass1,*pass2;
@@ -726,8 +727,14 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     strcat(pass,",");
     strcat(pass,pass2);
     strcat(pass,")");
+    // printf(" before kdf: %s\n", pass);
+
     //using kdf function
     PKCS5_PBKDF2_HMAC_SHA1(pass,strlen(pass),NULL,0,1000,B,out);
+    // printf(" after kdf: ");
+    // for(int i=0;i<2;i++)
+    //     printf("%d  ", out[i]);
+    // printf("\n");
 
     // calculating K_m
     int idx_out = 0,x_out;
@@ -761,10 +768,11 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     BIGNUM *C_sigma = BN_new();
     BIGNUM *C_m = BN_new();
 
-    BIGNUM *H2_km = BN_new();
-    BIGNUM *H3_sigma = BN_new();
+    BIGNUM *H2_km /* H2(k_m) */= BN_new();
+    BIGNUM *H3_sigma /* H3(sigma_m) */= BN_new();
 
     char *temp2 = BN_bn2dec(K_m);
+    DEBUG(__LINE__);
 
     compute_hash_new(H2_km,temp2);
     compute_hash2_new(H3_sigma,sigma);
@@ -776,6 +784,10 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     cph->C_sigma_m = C_sigma;
     cph->K_1m = k1m;
     cph->K_2m = k2m;
+    // printf(" C_m : %s\n", cph->C_m);
+    // printf(" C_m : %s\n", cph->C_sigma_m);
+
+    // DEBUG(__LINE__);
 
     for (int i=0;i<pub->n;i++) {
         cph->Policy[i] = attributes[i];
@@ -789,10 +801,19 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
 
     //computing P_m_i
 
-    for(int i=1;i<=pub->n - ones;i++) {
-      cph->P_m_i[i] = EC_POINT_new(curve);
-      EC_POINT_mul(curve,cph->P_m_i[i],NULL,pub->P_i[i],r_m,ctx);
+    for(int i=0;i<=pub->n - ones;i++) {
+        cph->P_m_i[i] = EC_POINT_new(curve);
+        EC_POINT_mul(curve,cph->P_m_i[i],NULL,pub->P_i[i],r_m,ctx);
     }
+
+    // for(int i)
+        // DEBUG(__LINE__);
+        // EC_POINT_get_affine_coordinates(curve, cph->P_m_i[i], x, y,ctx);
+        // BN_print_fp(stdout, x);
+        // putc('\n', stdout);
+        // BN_print_fp(stdout, y);
+        // putc('\n', stdout);
+        
     BN_CTX_free(ctx);
     return cph;
 }
