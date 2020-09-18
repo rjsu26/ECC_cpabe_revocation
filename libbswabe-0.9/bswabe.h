@@ -110,7 +110,7 @@ bswabe_cph_t* bswabe_enc( bswabe_pub_t* pub, bswabe_msk_t* msk, char* m, int att
 
 // NEw 
 bswabe_cph_t *
-bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]);
+bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int policy[]);
 BIGNUM *f(BIGNUM *x,int *attributes,int n);
 
 int verify(bswabe_verification_t *ver, bswabe_signature_t *signa, bswabe_cph_t *cp, bswabe_pub_t *pub);
@@ -135,6 +135,9 @@ void bswabe_proxy(mpz_t k1, mpz_t C_attr, mpz_t C_user);
   satisfy the policy of the ciphertext (in which case m is unaltered).
 */
 int bswabe_dec( bswabe_pub_t* pub, bswabe_prv_t* prv, bswabe_cph_t* cph, char* m);
+
+// NEW
+int bswabe_dec_new(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, char* m);
 /*
   Exactly what it seems.
 */
@@ -147,7 +150,7 @@ GByteArray* bswabe_verification_serialize( bswabe_verification_t * ver );
 // NEW
 GByteArray *bswabe_pub_serialize_new(bswabe_pub_t *pub);
 GByteArray * bswabe_msk_serialize_new(bswabe_msk_t *msk);
-GByteArray *bswabe_prv_serialize_new(bswabe_prv_t *prv);
+GByteArray *bswabe_prv_serialize_new(bswabe_prv_t *prv, int n);
 GByteArray *bswabe_cph_serialize_new(bswabe_cph_t *cph, int n,bswabe_pub_t *pub);
 /*
   Also exactly what it seems. If free is true, the GByteArray passed
@@ -162,7 +165,7 @@ bswabe_verification_t* bswabe_verification_unserialize( bswabe_pub_t* pub, GByte
 // NEW
 bswabe_pub_t * bswabe_pub_unserialize_new(GByteArray *b, int free);
 bswabe_msk_t *bswabe_msk_unserialize_new(GByteArray *b, int free);
-bswabe_prv_t *bswabe_prv_unserialize_new(GByteArray *b, int free);
+bswabe_prv_t *bswabe_prv_unserialize_new(bswabe_pub_t* pub, GByteArray *b, int free);
 bswabe_cph_t* bswabe_cph_unserialize_new( bswabe_pub_t* pub, GByteArray* b, int free );
 /*
   Again, exactly what it seems.

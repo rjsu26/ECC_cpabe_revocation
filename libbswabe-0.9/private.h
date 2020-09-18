@@ -71,6 +71,7 @@ struct bswabe_prv_s
 	mpz_t e_a;
 
 	// ============= Our ECC stuff ===================
+	int attributes[100]; // store attributes values upto 100 values.
 	BIGNUM *u1; 
 	BIGNUM *u2; 
 };

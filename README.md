@@ -51,10 +51,19 @@
       2. Run the command:
             `gcc -o keygendemo keygen.c common.c policy_lang.c -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pbc -I/usr/local/include/pbc -lglib-2.0 -Wl,-rpath /usr/local/lib -lgmp -Wl,-rpath /usr/local/lib -lpbc -lbswabe -lcrypto -lcrypto -lgmp -w`
       3.   If no error, `keygendemo` executable file is created.
-      4.   Run `./keygendemo pub_key master_key n [Attrs..]` where n is number of attributes entered in setup program while [Attrs.. ] represents list of attributes in binary separated by space. Eg. If n=4 then a sample attribute list will be 1 0 0 1 .
+      4.   Run `./keygendemo pub_key master_key [Attrs..]` where n is number of attributes entered in setup program while [Attrs.. ] represents list of attributes in binary separated by space. Eg. If n=4 then a sample attribute list will be 1 0 0 1 .
       5.   File named "priv_key" will be created unless "-o" option is used in step 4 in which case, the mentioned name will be the output file.
 
 4. #### enc.c    
+      1. Run the command:
+            `gcc -o encdemo enc.c common.c policy_lang.c -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pbc -I/usr/local/include/pbc -O3 -Wall -lglib-2.0 -Wl,-rpath /usr/local/lib -lgmp -Wl,-rpath /usr/local/lib -lpbc -lbswabe -lcrypto -lcrypto -lgmp -w`
+      2. If no error, `encdemo` executable file is created.
+      3. Before running this file, create/bring a sample file that needs to be encrypted, say `trial.txt`
+      4. Run `./encdemo pub_key trial.txt 1 0 1 1` , where pub_key is name of public key file generated in setup phase, and 1 0 1 1 is a sample attribute corresponding to n=4 (specified in keygen step), which will be used in encrypting the doc.
+      5. File named "trial.txt.cpabe" will replace the originally existing file containing the encrypted unreadable text.
+
+5. #### dec.c
+      1.  
 
 ### Additional Files:
 1. **demo.c** : Extra file to try and test code bits before putting them into main files. 

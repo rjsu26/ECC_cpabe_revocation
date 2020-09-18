@@ -340,7 +340,7 @@ int *delete_subarr(int arr_primes[], int arr_remove[], int n, int m)
     return ans_array;
 }
 BIGNUM *f(BIGNUM *x,int *attributes,int n) {
-  DEBUG(__LINE__);
+//   DEBUG(__LINE__);
   BN_CTX *ctx = BN_CTX_new();
   BIGNUM *res = BN_new();
   BN_one(res);
@@ -355,7 +355,7 @@ BIGNUM *f(BIGNUM *x,int *attributes,int n) {
       BN_add_word(tmp,temp);
       BN_mul(res,res,tmp,ctx);
     }
-  DEBUG(__LINE__);
+//   DEBUG(__LINE__);
   }
   BN_CTX_free(ctx);
   return res;
@@ -591,7 +591,7 @@ bswabe_cph_t* bswabe_enc( bswabe_pub_t* pub, bswabe_msk_t* msk, char* m, int att
 
 // NEW
 bswabe_cph_t *
-bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[])
+bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int policy[])
 {
 
 
@@ -606,7 +606,7 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     // BN_print_fp(stdout, pol);printf("\n");
     for(int i=0;i<pub->n;i++) {
         BN_mul_word(pol,10);
-        BN_add_word(pol,attributes[i]);
+        BN_add_word(pol,policy[i]);
     }
 
     // DEBUG(__LINE__);
@@ -638,16 +638,16 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     char *sol;
     sol = take_Concatenate_new(pol,M,sigma);
     DEBUG(__LINE__);
-    // printf("%s \n", sol);
+    printf("concat result :%s \n", sol);
     //computing hash of sol for r_m
     compute_hash_new(r_m,sol);
     BN_mod(r_m,r_m,pub->p,ctx);
     // DEBUG(__LINE__);
-    // BN_print_fp(stdout, r_m); printf("\n");
+    BN_print_fp(stdout, r_m); printf("\n");
 
     // calculating polynomial of f(x,policy)
 
-    unsigned long long int *polynomial = coefficients(attributes,pub->n);
+    unsigned long long int *polynomial = coefficients(policy,pub->n);
 
     // for(int i=0;i<=pub->n;i++) printf("%d ", polynomial[i]);
     // printf("\n");
@@ -693,7 +693,7 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     //calculating f(alpha)
     // BIGNUM *f_alpha = BN_new();
     // BN_zero(f_alpha);
-    // f(msk->alpha,attributes,pub->n);
+    // f(msk->alpha,policy,pub->n);
 
 
 
@@ -703,6 +703,7 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     if (1 != EC_POINT_mul(curve, r_m_P, r_m, NULL, NULL, ctx)) 
         handleErrors(__LINE__);
     
+    printf("R_m_P : %s\n",  EC_POINT_point2hex(curve, r_m_P, POINT_CONVERSION_COMPRESSED, ctx));
 
 
     // getting coordinates of r_m_P
@@ -727,8 +728,8 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     strcat(pass,",");
     strcat(pass,pass2);
     strcat(pass,")");
-    // printf(" before kdf: %s\n", pass);
-
+    printf(" pass: %s\n", pass);
+    DEBUG(__LINE__);
     //using kdf function
     PKCS5_PBKDF2_HMAC_SHA1(pass,strlen(pass),NULL,0,1000,B,out);
     // printf(" after kdf: ");
@@ -772,7 +773,7 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     BIGNUM *H3_sigma /* H3(sigma_m) */= BN_new();
 
     char *temp2 = BN_bn2dec(K_m);
-    DEBUG(__LINE__);
+    // DEBUG(__LINE__);
 
     compute_hash_new(H2_km,temp2);
     compute_hash2_new(H3_sigma,sigma);
@@ -790,12 +791,12 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
     // DEBUG(__LINE__);
 
     for (int i=0;i<pub->n;i++) {
-        cph->Policy[i] = attributes[i];
+        cph->Policy[i] = policy[i];
     }
     // calculating Pmi
     int ones = 0;                        // counting set bits in policy
     for(int i=0;i<pub->n;i++){
-        if(attributes[i]==1)
+        if(policy[i]==1)
             ++ones;
     }
 
@@ -819,7 +820,7 @@ bswabe_enc_new(bswabe_pub_t *pub, bswabe_msk_t *msk, BIGNUM* M, int attributes[]
 }
 
 
-
+// NEW
 bswabe_prv_t *bswabe_keygen(bswabe_prv_t** prv, bswabe_pub_t *pub, bswabe_msk_t *msk, int user_attr_set[])
 {
     // DEBUG(__LINE__);
@@ -829,9 +830,11 @@ bswabe_prv_t *bswabe_keygen(bswabe_prv_t** prv, bswabe_pub_t *pub, bswabe_msk_t 
     //DEBUG(__LINE__);
     *prv = malloc(sizeof(bswabe_prv_t));
     //DEBUG(__LINE__);
+    for(int i=0;i<pub->n; i++) 
+        (*prv)->attributes[i]=user_attr_set[i];
+    
     (*prv)->u1 = BN_new();
     (*prv)->u2 = BN_new();
-
     // //DEBUG(__LINE__);
     BIGNUM *f_alpha = f(msk->alpha, user_attr_set,pub->n); // findinf f(alpha, attributes)
     BIGNUM *s_u = BN_new();
@@ -856,7 +859,7 @@ bswabe_prv_t *bswabe_keygen(bswabe_prv_t** prv, bswabe_pub_t *pub, bswabe_msk_t 
     // Finding u1
     //DEBUG(__LINE__);
     BN_mod_mul((*prv)->u1, msk->k1, t_u, pub->p, ctx); // u1 = k1 * t_u
-	BN_print_fp(stdout, (*prv)->u1); printf("\n");
+	// BN_print_fp(stdout, (*prv)->u1); printf("\n");
     // BN_mod_add(prv->u1, r_u, prv->u1, pub->p, ctx); // u1 = r_u + k1*t_u (mod p)
 
     //DEBUG(__LINE__);
@@ -1055,4 +1058,232 @@ int bswabe_dec(bswabe_pub_t* pub, bswabe_prv_t* prv, bswabe_cph_t* cph, char* m)
     }
 
     return 0;
+}
+
+// NEW
+unsigned long long int *coefficients_dec(int attribute[], int policy[],int n) 
+{
+  unsigned long long int *poly = (unsigned long long int*)calloc(n+1,sizeof(unsigned long long int));
+  for(int i=0;i<=n;i++) 
+  {
+    poly[i] = 0;
+  }
+  poly[0]=1;
+  int set_bit_count=0;
+  for(int i=0;i<n;i++)
+  {
+	  if(policy[i]==1)
+	  {
+		  set_bit_count++;
+	  }
+  }
+  for(int i=0; i<(n-set_bit_count) ;i++) 
+  {
+    if(attribute[i]-policy[i]==1)
+	{
+      multi(poly,n,hash_4(i+1));
+    }
+  }
+
+  return poly;
+}
+
+// NEW
+int bswabe_dec_new(bswabe_pub_t *pub, bswabe_prv_t *prv, bswabe_cph_t *cph, char* m) // attrib is P
+{
+        DEBUG(__LINE__);
+    // printf("C_sigma_m : %s\n", cph->C_sigma_m);
+/***********************************
+	      D1 = DONE
+************************************/
+	for(int i=0;i<pub->n;i++){
+        // printf("%d %d\n", prv->attributes[i], cph->Policy[i]);
+		if(prv->attributes[i]<cph->Policy[i]){
+            /* attr[i]  pol[i]    match?
+                    0       0             y
+                    0        1             n
+                    1        0            y
+                    1        1             y 
+                */
+            printf("Attributes and policy don't match\n");
+			return 0;
+        } 
+    }
+
+/***********************************
+	      D2  = DONE
+************************************/
+
+	EC_GROUP *curve = create_curve(pub->a,pub->b,pub->p,pub->order,pub->G_x,pub->G_y);
+
+	// Create two points U and V on ECC 
+	BN_CTX *ctx = BN_CTX_new();
+	EC_POINT *U = EC_POINT_new(curve);
+	EC_POINT *V = EC_POINT_new(curve);
+
+	// Calculation of U and V
+	EC_POINT_mul(curve, U, NULL, prv->u2, cph->K_1m, ctx);
+	EC_POINT_mul(curve, V, NULL, prv->u1, cph->K_2m, ctx);
+    // DEBUG(__LINE__);
+	
+	// Calculating U+V and storing in new variable 'sum_of_U_and_V'
+	EC_POINT *sum_of_U_and_V = EC_POINT_new(curve);
+	EC_POINT_add(curve, sum_of_U_and_V,   U,  V,   ctx);
+	
+    // DEBUG(__LINE__);
+/***********************************
+	      //D3 = DONE
+************************************/
+	
+    
+	unsigned long long int *polynomial = coefficients_dec(prv->attributes,cph->Policy,pub->n);
+	
+    // DEBUG(__LINE__);
+	int count=0;
+
+	for(int i=0;i< pub->n;i++)
+		if(cph->Policy[i]==1) 
+            count++;
+	
+	EC_POINT *W = EC_POINT_new(curve);
+    EC_POINT_set_to_infinity(curve, W);
+	EC_POINT *temp_sum = EC_POINT_new(curve);
+    BIGNUM *mul = BN_new();
+    // for(int i=0;i<3;i++)
+	// 	printf("Point P_m_i[%d] : %s\n",i,  EC_POINT_point2hex(curve, cph->P_m_i[i], POINT_CONVERSION_COMPRESSED, ctx));
+	
+    for(int i=0; i<(pub->n-count) ;i++)
+	{
+		//ECC MULTIPLICATION
+        // printf("poly[%d] : %d\n", i, polynomial[i] );
+        BN_set_word(mul, polynomial[i]); 
+        // BN_print_fp(stdout, mul); printf("\n");
+		// printf("Point P_m_i[%d] : %s\n",i,  EC_POINT_point2hex(curve, cph->P_m_i[i], POINT_CONVERSION_COMPRESSED, ctx));
+        if(!EC_POINT_mul(curve,temp_sum,NULL, cph->P_m_i[i], mul,ctx))
+            handleErrors(__LINE__);
+		// printf("Point temp_sum %d: %s\n",i,  EC_POINT_point2hex(curve, temp_sum, POINT_CONVERSION_COMPRESSED, ctx));
+
+		if(!EC_POINT_add(curve,W,W,temp_sum,ctx))
+            handleErrors(__LINE__);
+		// printf("Point W %d: %s\n",i,  EC_POINT_point2hex(curve, temp_sum, POINT_CONVERSION_COMPRESSED, ctx));
+	}
+
+    // printf("W(before invert) : %s\n",  EC_POINT_point2hex(curve, W, POINT_CONVERSION_COMPRESSED, ctx));
+    
+    EC_POINT_invert(curve, W, ctx); // W = -W
+    
+    printf("W(after invert) : %s\n",  EC_POINT_point2hex(curve, W, POINT_CONVERSION_COMPRESSED, ctx));
+	EC_POINT_add(curve,sum_of_U_and_V,sum_of_U_and_V,W,ctx); // sum_of_U_and_V = U + V - W
+    printf("U + V - W : %s\n",  EC_POINT_point2hex(curve, sum_of_U_and_V, POINT_CONVERSION_COMPRESSED, ctx));
+
+    // calculate modular inverse of F0 = (F0)^-1 mod P
+    BIGNUM *F0 = BN_new();
+    BN_set_word(F0, polynomial[0]);
+    BN_mod_inverse(F0, F0, pub->p, ctx);
+    printf("F0 inverse : "); print_bignum(F0); 
+    
+	EC_POINT *r_m_P = EC_POINT_new(curve);
+    // r_m_P = (U+V-W) / F0
+	EC_POINT_mul(curve,r_m_P, NULL, sum_of_U_and_V, F0, ctx);	
+    printf("R_m_P : %s\n",  EC_POINT_point2hex(curve, sum_of_U_and_V, POINT_CONVERSION_COMPRESSED, ctx));
+    
+/***********************************
+	      //D4 = DONE
+************************************/
+
+    BIGNUM *x = BN_new();
+    BIGNUM *y = BN_new();
+
+    DEBUG(__LINE__);
+    EC_POINT_invert(curve, r_m_P, ctx); // W = -W
+    EC_POINT_get_affine_coordinates_GFp(curve,r_m_P,x,y,ctx);
+
+    char *pass1,*pass2;
+    pass1=(char*)BN_bn2dec(x);
+    pass2=(char*)BN_bn2dec(y);
+    int B = 20;    
+    unsigned char *pass = (unsigned char*)calloc(200,sizeof(unsigned char)) ;
+    unsigned char *out = (unsigned char*)calloc(B,sizeof(unsigned char));
+    strcpy(pass,"(");
+    strcat(pass,pass1);
+    strcat(pass,",");
+    strcat(pass,pass2);
+    strcat(pass,")");
+    printf("pass = %s\n", pass);
+    DEBUG(__LINE__);
+
+    PKCS5_PBKDF2_HMAC_SHA1(pass,strlen(pass),NULL,0,1000,B,out);
+
+    int idx_out = 0,x_out;
+    int temp_out[2*B];
+    
+    for(int i =0;i<B;i++){
+      x_out = (int)out[i];
+      temp_out[idx_out++] = x_out/16;
+      temp_out[idx_out++] = x_out%16;
+    }
+    BIGNUM *kdf_r_m_p = BN_new();
+    BN_zero(kdf_r_m_p);
+    for(int i=0;i<2*B;i++){
+      BN_mul_word(kdf_r_m_p,16);
+      BN_add_word(kdf_r_m_p,temp_out[i]);
+    }
+    char *temp2 = BN_bn2dec(kdf_r_m_p);
+    printf("temp2 = %s\n", temp2);
+	
+    BIGNUM *H2_kdf_r_m_P=BN_new();
+	compute_hash_new(H2_kdf_r_m_P, temp2);
+    printf("H2_kdf_r_m_p : "); print_bignum(H2_kdf_r_m_P); 
+
+	BIGNUM *sigma_m_new=BN_new();
+	BIGNUM *M_new=BN_new();
+	BIGNUM *H3_sigma=BN_new();
+    BIGNUM *C_sigma_m = BN_bin2bn(cph->C_sigma_m, sizeof(cph->C_sigma_m), NULL);
+
+    // change bits to big num // (&C_sigma , cph->C_sigma_m );
+    printf("C_sigma_m : %s\n", cph->C_sigma_m);
+    printf("C_sigma_m new : "); print_bignum(C_sigma_m); 
+    // DEBUG(__LINE__);
+
+	BN_GF2m_add(sigma_m_new,H2_kdf_r_m_P, C_sigma_m);
+    printf("sigma_m_new : "); print_bignum(sigma_m_new); 
+
+    // DEBUG(__LINE__);
+
+	compute_hash2_new(H3_sigma,sigma_m_new);
+    printf("H3_sigma : "); print_bignum(H3_sigma);
+    BIGNUM *C_m = BN_bin2bn(cph->C_m, sizeof(cph->C_m), NULL);
+    BN_GF2m_add(M_new,C_m,H3_sigma);
+    printf("M_new : "); print_bignum(M_new);
+
+	BIGNUM *r_m_new=BN_new();
+	char *sol;
+    BIGNUM *pol = BN_new();
+    BN_zero(pol);
+    // BN_print_fp(stdout, pol);printf("\n");
+    for(int i=0;i<pub->n;i++) {
+        BN_mul_word(pol,10);
+        BN_add_word(pol,cph->Policy[i]);
+    }
+    sol = take_Concatenate_new(pol,M_new,sigma_m_new);
+    DEBUG(__LINE__);
+    printf("concat result :%s \n", sol);
+
+    compute_hash_new(r_m_new,sol);
+    BN_mod(r_m_new,r_m_new,pub->p,ctx);
+
+	EC_POINT *r_m_P_new = EC_POINT_new(curve);
+    EC_POINT_mul(curve, r_m_P_new, r_m_new, NULL, NULL,ctx);
+
+    char *M = BN_bn2dec(M_new);
+
+	if(EC_POINT_cmp(curve, r_m_P, r_m_P_new, ctx)==0 ) // Both points are equal?
+	{
+        m = M;
+        BN_CTX_free(ctx);
+        return 1;
+	}
+
+    BN_CTX_free(ctx);
+	return 0;
 }

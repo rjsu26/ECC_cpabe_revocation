@@ -144,16 +144,16 @@ int main(int argc, char **argv)
 	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
 	// msk = bswabe_msk_unserialize_new(suck_file(msk_file), 1);
 
-	int attributes[n];
+	int policy[n];
 	for (int i = 0; i < n; i++)
 		if (strcmp(attrs[i], "1") == 0)
-			attributes[i] = 1;
+			policy[i] = 1;
 		else
-			attributes[i] = 0;
+			policy[i] = 0;
 
-/* Print the saved attributes */	
+/* Print the saved policy */	
 // 	for(int i=0;i<n;i++)
-	// 	printf("%d  ", attributes[i]);
+	// 	printf("%d  ", policy[i]);
 	// printf("\n");
 
 	// Do AES encryption of input file
@@ -182,9 +182,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "1ERROR: fopen error: %s\n", strerror(errno));
         return errno;
     }
-	// char ch;
-	// while((ch = fgetc(f_input)) != EOF)
-    //   printf("%c", ch);
 
     /* Open and truncate file to zero length or create ciphertext file for writing */
 	FILE *f_out = fopen(out_file, "wb");
@@ -197,8 +194,13 @@ int main(int argc, char **argv)
 	aes_cbc_256(f_input, f_out, encrypt,key, iv); 
 	fclose(f_out);
 	f_out = fopen(out_file, "rb");
-	// printf("Outfile content is \n");
-
+	printf("Outfile content is \n");
+	char ch;
+	while((ch = fgetc(f_out)) != EOF)
+      printf("%c", ch);\
+	
+	printf("\n");
+	fseek(f_out, 0, SEEK_SET);
     if (!f_out) {
         /* Unable to open file for reading */
         fprintf(stderr, "1ERROR: fopen error: %s\n", strerror(errno));
@@ -226,7 +228,7 @@ int main(int argc, char **argv)
     // strcat(M, IV);
 	// printf("combined key = %s\n", M);
 	// encrypt the message M
-	if (!(cph = bswabe_enc_new(pub, msk, Mon, attributes)))
+	if (!(cph = bswabe_enc_new(pub, msk, Mon, policy)))
 		die("%s", bswabe_error());
 	
 	// serialize the ciphertext parameters
@@ -249,15 +251,15 @@ int main(int argc, char **argv)
 	// CHANGE THIS FUNCTION ACCORDINGLY 
 	write_cpabe_file(out_file, cph_buf, file_len, aes_buf);
 
-	DEBUG(__LINE__);
+	// DEBUG(__LINE__);
 	g_byte_array_free(cph_buf, 1);
 	g_byte_array_free(aes_buf, 1);
 	t2 = clock();
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
 	printf("\nTime taken in seconds=%f\n", diff);
 
-	if (!keep)
-		unlink(in_file);
+	// if (!keep)
+	// 	unlink(in_file);
 
 	return 0;
 }

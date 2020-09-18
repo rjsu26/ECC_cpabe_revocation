@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 
 	bswabe_keygen(&prv, pub, msk, attributes);
 
-	spit_file(out_file, bswabe_prv_serialize_new(prv), 1);
+	spit_file(out_file, bswabe_prv_serialize_new(prv, n), 1);
 	t2 = clock();
 
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
