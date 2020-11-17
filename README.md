@@ -59,12 +59,17 @@
             `gcc -o encdemo enc.c common.c policy_lang.c -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pbc -I/usr/local/include/pbc -O3 -Wall -lglib-2.0 -Wl,-rpath /usr/local/lib -lgmp -Wl,-rpath /usr/local/lib -lpbc -lbswabe -lcrypto -lcrypto -lgmp -w`
       2. If no error, `encdemo` executable file is created.
       3. Before running this file, create/bring a sample file that needs to be encrypted, say `trial.txt`
-      4. Run `./encdemo pub_key trial.txt 1 0 1 1` , where pub_key is name of public key file generated in setup phase, and 1 0 1 1 is a sample attribute corresponding to n=4 (specified in keygen step), which will be used in encrypting the doc.
+      4. Run `./encdemo pub_key trial.txt 1 0 1 1` , where pub_key is name of public key file generated in setup phase, and 1 0 1 1 is a sample policy corresponding to n=4 (specified in keygen step), which will be used in encrypting the doc.
       5. File named "trial.txt.cpabe" will replace the originally existing file containing the encrypted unreadable text.
 
 5. #### dec.c
-      1.  
-
+      1.  Run the command:
+            `gcc -o decdemo dec.c common.c  -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pbc -I/usr/local/include/pbc -O3 -Wall -lglib-2.0 -Wl,-rpath /usr/local/lib -lgmp -Wl,-rpath /usr/local/lib -lpbc -lbswabe -lcrypto -lcrypto -lgmp -w`
+      2. If no error, `decdemo` executable file is created.
+      3. Ensure that the previously encrypted file is available in the present directory.
+      4. Run `./decdemo pub_key priv_key trial.txt.cpabe`
+      5. If the user's ID is available on the server and is not revoked from access, then decryption will pass and "trial.txt" will be produced, otherwise decryption will fail. 
+ 
 ### Additional Files:
 1. **demo.c** : Extra file to try and test code bits before putting them into main files. 
 2. **ecc.c** : openSSL way of defining a curve, doing point addition, double and multiplication. For reference. (requires openSSL to be installed in the system) 

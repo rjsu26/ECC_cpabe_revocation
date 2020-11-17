@@ -19,14 +19,6 @@ char *usage =
 	"for use with cpabe-keygen, cpabe-enc, and cpabe-dec.\n"
 	"\n"
 	"Output will be written to the files \"pub_key\" and \"master_key\"\n"
-	"unless the --output-public-key or --output-master-key options are\n"
-	"used.\n"
-	"\n"
-	" -h, --help                    print this message\n\n"
-	" -p, --output-public-key FILE  write public key to FILE\n\n"
-	" -m, --output-master-key FILE  write master secret key to FILE\n\n"
-	" -d, --deterministic           use deterministic \"random\" numbers\n"
-	"                               (only for debugging)\n\n"
 	"";
 
 char *pub_file = "pub_key";

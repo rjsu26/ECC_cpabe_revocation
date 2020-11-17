@@ -137,8 +137,8 @@ int main(int argc, char **argv)
 	srand(time(NULL));
 	int n = parse_args(argc, argv);
 	t1 = clock();
-	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
 	msk = bswabe_msk_unserialize_new(suck_file(msk_file), 1);
+	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
 
 	int attributes[n];
 	for (int i = 0; i < n; i++)
