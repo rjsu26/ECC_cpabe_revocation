@@ -19,14 +19,6 @@ char *usage =
 	"for use with cpabe-keygen, cpabe-enc, and cpabe-dec.\n"
 	"\n"
 	"Output will be written to the files \"pub_key\" and \"master_key\"\n"
-	"unless the --output-public-key or --output-master-key options are\n"
-	"used.\n"
-	"\n"
-	" -h, --help                    print this message\n\n"
-	" -p, --output-public-key FILE  write public key to FILE\n\n"
-	" -m, --output-master-key FILE  write master secret key to FILE\n\n"
-	" -d, --deterministic           use deterministic \"random\" numbers\n"
-	"                               (only for debugging)\n\n"
 	"";
 
 char *pub_file = "pub_key";
@@ -80,7 +72,8 @@ int main(int argc, char **argv)
 	// DEBUG(__LINE__);
 	//printf("\n before call \n");
 	printf("\nEnter no of attributes in system(1-100) : ");
-	scanf("%d", &n); printf("\n");
+	scanf("%d", &n);
+	//  printf("\n");
 	if (n<=0 || n>100){
 		printf("Number of attributes incorrect. Retry..\n");
 		return 0;
@@ -92,6 +85,6 @@ int main(int argc, char **argv)
 
 	t2 = clock();
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
-	printf("\nTime taken in seconds=%f", diff);
+	printf("\nTime taken = %f seconds \n\n", diff);
 	return 0;
 }

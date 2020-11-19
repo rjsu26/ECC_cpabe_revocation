@@ -2,9 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <openssl/bn.h>
+
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/aes.h>
+#include <openssl/sha.h>
 #include <openssl/rand.h>
 
 #define ERR_EVP_CIPHER_INIT -1
@@ -31,6 +34,9 @@ typedef struct _cipher_params_t{
 // }
 
 void file_encrypt_decrypt( FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned char *key, unsigned char *iv){
+    if(encrypt) printf("encrypting...\n");
+    else printf("decrypting..\n");
+
     /* Allow enough space in output buffer for additional block */
     int cipher_block_size = EVP_CIPHER_block_size(EVP_aes_256_cbc());
     unsigned char in_buf[BUFSIZE], out_buf[BUFSIZE + cipher_block_size];
@@ -66,6 +72,8 @@ void file_encrypt_decrypt( FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned c
     while(1){
         // Read in data in blocks until EOF. Update the ciphering with each read.
         num_bytes_read = fread(in_buf, sizeof(unsigned char), BUFSIZE, ifp);
+		printf("input buffer size1: %d\n", num_bytes_read);
+
         if (ferror(ifp)){
             fprintf(stderr, "ERROR: fread error: %s\n", strerror(errno));
             EVP_CIPHER_CTX_cleanup(ctx);
@@ -78,7 +86,11 @@ void file_encrypt_decrypt( FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned c
             exit(-2);
             // cleanup(params, ifp, ofp, ERR_EVP_CIPHER_UPDATE);
         }
+
+        printf("out buff : %s\n", out_buf);
         fwrite(out_buf, sizeof(unsigned char), out_len, ofp);
+        // for(int i=0;i<out_len;i++)
+        // printf("%c ", out_buf[i]);
         if (ferror(ofp)) {
             fprintf(stderr, "ERROR: fwrite error: %s\n", strerror(errno));
             EVP_CIPHER_CTX_cleanup(ctx);
@@ -136,11 +148,35 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "ERROR: RAND_bytes error: %s\n", strerror(errno));
         return errno;
     }
-    printf("key: %s\n", key);
-    printf("iv: %s\n", iv);
+    printf("size of key: %d\n", sizeof(key));
+    for(int i=0;i<32;i++){
+        printf("%d ", key[i] );
+    }
+    printf("\n");
+    // unsigned char* KEY1 = key;
+    // BN_CTX *ctx = BN_CTX_new();
+    BIGNUM *Mon= BN_bin2bn(key, sizeof(key), NULL);
+    BN_print_fp(stdout, Mon);printf("\n");
+
+    unsigned char *to = malloc((BN_num_bytes(Mon) +1)*sizeof(char));
+    BN_bn2bin(Mon, to);
+    for(int i=0;i<32;i++){
+        printf("%d ", to[i] );
+    }
+    printf("\n");
+    // printf("\nkey: %s\n", to);
+
+    return 0;
+
+    // printf("iv: %s\n", iv);
     unsigned char *KEY = key;
     unsigned char *IV = iv;
 
+    BN_CTX *ctx = BN_CTX_new();
+    BIGNUM *M = BN_new();
+    BN_dec2bn(&M,KEY);
+    BN_print(stdin, M);
+    return 0;
     /* Indicate that we want to encrypt */
     unsigned int encrypt = 1;
 
@@ -154,6 +190,10 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "ERROR: fopen error: %s\n", strerror(errno));
         return errno;
     }
+    // char ch;
+	// while((ch = fgetc(f_input)) != EOF)
+    //   printf("%c", ch);
+
 
     /* Open and truncate file to zero length or create ciphertext file for writing */
     f_enc = fopen("encrypted_file", "wb");

@@ -9,6 +9,8 @@
 	TODO if ssl sha1 not available, use built in one (sha1.c)
 */
 
+#include<gmp.h>
+
 char*       suck_file_str( char* file );
 char*       suck_stdin();
 GByteArray* suck_file( char* file );
@@ -29,7 +31,7 @@ GByteArray* aes_128_cbc_decrypt( GByteArray* ct, element_t k );
 // NEW
 void aes_cbc_256(FILE *ifp, FILE *ofp, unsigned int encrypt,unsigned char *key, unsigned char *iv);
 
-#define CPABE_VERSION PACKAGE_NAME "%s " PACKAGE_VERSION "\n" \
+#define CPABE_VERSION "cpabe" "%s " "0.11" "\n" \
 "\n" \
 "Parts Copyright (C) 2006, 2007 John Bethencourt and SRI International.\n" \
 "This is free software released under the GPL, see the source for copying\n" \

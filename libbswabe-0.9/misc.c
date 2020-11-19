@@ -44,9 +44,22 @@ void serialize_string_point(GByteArray *b, EC_POINT *x, EC_GROUP *curve, BN_CTX*
 {
     char *s;
     s = malloc(sizeof(char) * 100);
+	// DEBUG(__LINE__);
+	// BIGNUM *x1 = BN_new();
+    // BIGNUM *y1 = BN_new();
+	// DEBUG(__LINE__);
+    // EC_POINT_get_affine_coordinates_GFp(curve,x,x1,y1,ctx);
+	// DEBUG(__LINE__);
+    // BN_print_fp(stdout, x1);
+    // putc('\n', stdout);
+    // BN_print_fp(stdout, y1);
+    // putc('\n', stdout);
+
+	// DEBUG(__LINE__);
     s = EC_POINT_point2hex(curve,x,POINT_CONVERSION_COMPRESSED, ctx); 
     // printf("\ns is %s\n", s);
     // printf("\n\n%ld\n\n", strlen(s));
+	// DEBUG(__LINE__);
     g_byte_array_append(b, (unsigned char *)s, strlen(s) + 1);
 }
 
@@ -224,9 +237,7 @@ bswabe_pub_t *bswabe_pub_unserialize_new(GByteArray *b, int free){
 	bswabe_pub_t *pub = (bswabe_pub_t*)malloc(sizeof(bswabe_pub_t));
 	int offset=0;
 	char* char_arr;
-	// DEBUG(__LINE__);
 	char_arr = unserialize_string_new(b,&offset); // for n
-	// DEBUG(__LINE__);
 	sscanf(char_arr, "%d", &(pub->n));
 	// printf("pub->n is %d\n", pub->n);
 	// DEBUG(__LINE__);
@@ -252,7 +263,6 @@ bswabe_pub_t *bswabe_pub_unserialize_new(GByteArray *b, int free){
 	pub->b = BN_dup(temp);
 	// BN_copy(pub->b, temp);
 
-	// DEBUG(__LINE__);
 	char_arr = unserialize_string_new(b,&offset); // order
 	BN_hex2bn(&temp, char_arr);
 	// printf("\n%s\n", char_arr);
@@ -278,19 +288,20 @@ bswabe_pub_t *bswabe_pub_unserialize_new(GByteArray *b, int free){
 
 	for(int i=0;i<pub->n;i++){ // for P_i[ ]
 		char_arr = unserialize_string_new(b,&offset); 
-    	EC_POINT_hex2point(curve, char_arr, pub->P_i[i], ctx);
+    	pub->P_i[i] = EC_POINT_hex2point(curve, char_arr, pub->P_i[i], ctx);
 	}
 
 	for(int i=0;i<pub->n;i++){ // for U_i[i]
 		char_arr = unserialize_string_new(b,&offset); 
-    	EC_POINT_hex2point(curve, char_arr, pub->U_i[i], ctx);
+    	pub->U_i[i] = EC_POINT_hex2point(curve, char_arr, pub->U_i[i], ctx);
+
 	}
 	for(int i=0;i<pub->n;i++){  // for V_i[i]
 		char_arr = unserialize_string_new(b,&offset); 
-    	EC_POINT_hex2point(curve, char_arr, pub->V_i[i], ctx);
+    	pub->V_i[i]=EC_POINT_hex2point(curve, char_arr, pub->V_i[i], ctx);
 	}
 	
-	// BN_CTX_free(ctx);
+	BN_CTX_free(ctx);
 	if (free)
 		g_byte_array_free(b, 1);
 	
@@ -415,15 +426,25 @@ bswabe_prv_serialize(bswabe_prv_t *prv)
 
 // NEW
 GByteArray *
-bswabe_prv_serialize_new(bswabe_prv_t *prv)
+bswabe_prv_serialize_new(bswabe_prv_t *prv, int n)
 {
 	GByteArray *b;
-	int i;
-
 	b = g_byte_array_new();
+	char *char_arr;
+	char_arr = malloc(sizeof(char)*100);
+	
+	// serializing attribute[]
+	for(int i=0;i<n;i++){
+		printf("attr[%d] : %d\n", i, prv->attributes[i]);
+		sprintf(char_arr, "%d", prv->attributes[i]);
+		g_byte_array_append(b, (unsigned char *)char_arr, strlen(char_arr)+1);
+	}
+
 
 	serialize_string_bn(b, prv->u1);
 	serialize_string_bn(b, prv->u2);
+	printf(" u1: "); BN_print_fp(stdout, prv->u1); printf("\n");
+	printf(" u2: "); BN_print_fp(stdout, prv->u2); printf("\n");
 
 	return b;
 
@@ -452,12 +473,19 @@ bswabe_prv_unserialize(bswabe_pub_t *pub, GByteArray *b, int free)
 }
 
 // NEW
-bswabe_prv_t *bswabe_prv_unserialize_new(GByteArray *b, int free){
+bswabe_prv_t *bswabe_prv_unserialize_new(bswabe_pub_t* pub, GByteArray *b, int free){
 	bswabe_prv_t *prv;
 	int offset=0;
 	prv = (bswabe_prv_t *)malloc(sizeof(bswabe_prv_t));
 	char* char_arr;
 	
+	// for attributes
+	for(int i=0;i<pub->n; i++){
+		char_arr = unserialize_string_new(b,&offset); 
+		sscanf(char_arr, "%d", &(prv->attributes[i]));
+		printf("attr[%d] = %d \n", i, prv->attributes[i]);
+	}
+
 	// for u1
 	char_arr = unserialize_string_new(b,&offset); 
 	BN_hex2bn(&(prv->u1), char_arr);
@@ -465,6 +493,8 @@ bswabe_prv_t *bswabe_prv_unserialize_new(GByteArray *b, int free){
 	char_arr = unserialize_string_new(b,&offset); 
 	BN_hex2bn(&(prv->u2), char_arr);
 
+	printf(" u1: "); BN_print_fp(stdout, prv->u1); printf("\n");
+	printf(" u2: "); BN_print_fp(stdout, prv->u2); printf("\n");
 	if (free)
 		g_byte_array_free(b, 1);
 
@@ -484,6 +514,62 @@ bswabe_cph_serialize(bswabe_cph_t *cph)
 	serialize_string(b, cph->C_sigma);
 	serialize_string(b, cph->S_m);
 	serialize_string(b, cph->e_p);
+
+	return b;
+}
+
+// NEW
+GByteArray *
+bswabe_cph_serialize_new(bswabe_cph_t *cph, int n, bswabe_pub_t *pub){
+	GByteArray *b;
+    b = g_byte_array_new();
+	char *char_arr;
+	char_arr = malloc(sizeof(char)*100);
+	
+	// serializing policy[]
+	for(int i=0;i<n;i++){
+		sprintf(char_arr, "%d", cph->Policy[i]);
+		printf("arr[%d] = %d\n", i, cph->Policy[i]); 
+		g_byte_array_append(b, (unsigned char *)char_arr, strlen(char_arr)+1);
+	}
+
+	int ones = 0;                        // counting set bits in policy
+    for(int i=0;i<n;i++){
+        if(cph->Policy[i]==1)
+            ++ones;
+    }
+	printf("ones = %d\n", ones); 
+
+	// DEBUG(__LINE__);
+	// serialising P_m_i
+	BN_CTX *ctx = BN_CTX_new();
+	EC_GROUP *curve;
+    curve = create_curve(pub->a,pub->b,pub->p,pub->order,pub->G_x,pub->G_y);
+
+	// for(int i=0;i<n;i++)
+	// 	printf("%d ", cph->Policy[i]);
+	// printf("%s \n%s\n", cph->C_sigma_m, cph->C_m);
+	BIGNUM *x1 = BN_new();
+	BIGNUM *y1 = BN_new();
+	// EC_POINT_get_affine_coordinates(curve,cph->P_m_i[0],x1,y1,ctx);
+
+	char *s;
+	for(int i=0; i<n-ones; i++){
+		// EC_POINT_get_affine_coordinates(curve,cph->P_m_i[i],x1,y1,ctx);
+		serialize_string_point(b, cph->P_m_i[i],curve,ctx);
+		printf("point P_m_i[%d] : %s\n", i,EC_POINT_point2hex(curve,cph->P_m_i[i], POINT_CONVERSION_COMPRESSED, ctx));
+	}
+	// DEBUG(__LINE__);
+
+	// serialising K_1m and K_2m
+	serialize_string_point(b, cph->K_1m,curve,ctx); 
+	printf("point K_1m : %s\n", EC_POINT_point2hex(curve,cph->K_1m, POINT_CONVERSION_COMPRESSED, ctx));
+	serialize_string_point(b, cph->K_2m,curve,ctx);
+	printf("point K_2m : %s\n", EC_POINT_point2hex(curve,cph->K_2m, POINT_CONVERSION_COMPRESSED, ctx));
+
+	// serialise C_sigma_m and C_m
+	g_byte_array_append(b, cph->C_sigma_m, strlen(cph->C_sigma_m)+1);
+	g_byte_array_append(b, cph->C_m, strlen(cph->C_m)+1);
 
 	return b;
 }
@@ -508,6 +594,66 @@ bswabe_cph_unserialize(bswabe_pub_t *pub, GByteArray *b, int free)
 
 	return cph;
 }
+
+// NEW 
+bswabe_cph_t* bswabe_cph_unserialize_new( bswabe_pub_t* pub, GByteArray* b, int free ){
+	DEBUG(__LINE__);
+	BN_CTX *ctx = BN_CTX_new();
+	bswabe_cph_t *cph = (bswabe_cph_t*)malloc(sizeof(bswabe_cph_t));
+	// DEBUG(__LINE__);
+
+	int offset=0, ones=0;
+	char* char_arr;
+	for(int i=0;i<pub->n;i++){
+		char_arr = unserialize_string_new(b,&offset);
+		sscanf(char_arr, "%d", &(cph->Policy[i]));
+		printf("pol[%d] = %d\n", i, cph->Policy[i]); 
+		if(cph->Policy[i]==1) 
+			ones++;
+	}
+	printf("ones = %d\n", ones); 
+
+	// DEBUG(__LINE__);
+	EC_GROUP *curve;
+    curve = create_curve(pub->a,pub->b,pub->p,pub->order,pub->G_x,pub->G_y);
+	EC_POINT    *P = EC_POINT_new(curve); // temp variable to store values
+	// DEBUG(__LINE__);
+	// for P_m_i
+	for(int i=0;i<pub->n-ones;i++){
+		char_arr = unserialize_string_new(b,&offset);
+		EC_POINT_hex2point(curve, char_arr, P, ctx);
+		cph->P_m_i[i]= EC_POINT_dup(P, curve);
+		// printf("Point %d : %s \n",i, char_arr ); 
+		printf("Point %d: %s\n",i,  EC_POINT_point2hex(curve, cph->P_m_i[i], POINT_CONVERSION_COMPRESSED, ctx));
+	}
+	// DEBUG(__LINE__);
+
+	// for K_1m
+	char_arr = unserialize_string_new(b,&offset); 
+	cph->K_1m = EC_POINT_hex2point(curve, char_arr,cph->K_1m, ctx);
+	printf("Point K_1m: %s\n", EC_POINT_point2hex(curve, cph->K_1m, POINT_CONVERSION_COMPRESSED, ctx));
+
+	// DEBUG(__LINE__);
+	// for K_2m
+	char_arr = unserialize_string_new(b,&offset); 
+	cph->K_2m = EC_POINT_hex2point(curve, char_arr,cph->K_2m, ctx);
+	printf("Point K_2m: %s\n", EC_POINT_point2hex(curve, cph->K_2m, POINT_CONVERSION_COMPRESSED, ctx));
+
+	char_arr = unserialize_string_new(b, &offset);
+	cph->C_sigma_m = char_arr;
+
+	char_arr = unserialize_string_new(b, &offset);
+	cph->C_m = char_arr;
+
+	printf("C_sigma_m : %s\n", cph->C_sigma_m);
+	printf("C_m : %s\n", cph->C_m);
+
+	if(free)
+		g_byte_array_free(b,1);
+	DEBUG(__LINE__);
+	return cph;
+}
+
 
 void bswabe_pub_free(bswabe_pub_t *pub)
 {

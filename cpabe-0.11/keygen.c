@@ -17,31 +17,11 @@
 char *usage =
 	"Usage: cpabe-keygen [OPTION ...] PUB_KEY MASTER_KEY ATTR [ATTR ...]\n"
 	"\n"
-	"Generate a key with the listed attributes using public key PUB_KEY and\n"
-	"master secret key MASTER_KEY. Output will be written to the file\n"
+	"Output will be written to the file\n"
 	"\"priv_key\" unless the -o option is specified.\n"
 	"\n"
-	"Attributes come in two forms: non-numerical and numerical. Non-numerical\n"
-	"attributes are simply any string of letters, digits, and underscores\n"
-	"beginning with a letter.\n"
-	"\n"
-	"Numerical attributes are specified as `attr = N', where N is a non-negative\n"
-	"integer less than 2^64 and `attr' is another string. The whitespace around\n"
-	"the `=' is optional. One may specify an explicit length of k bits for the\n"
-	"integer by giving `attr = N#k'. Note that any comparisons in a policy given\n"
-	"to cpabe-enc(1) must then specify the same number of bits, e.g.,\n"
-	"`attr > 5#12'.\n"
-	"\n"
-	"The keywords `and', `or', and `of', are reserved for the policy language\n"
-	"of cpabe-enc (1) and may not be used for either type of attribute.\n"
-	"\n"
-	"Mandatory arguments to long options are mandatory for short options too.\n\n"
-	" -h, --help               print this message\n\n"
-	" -v, --version            print version information\n\n"
-	" -o, --output FILE        write resulting key to FILE\n\n"
-	" -d, --deterministic      use deterministic \"random\" numbers\n"
-	"                          (only for debugging)\n\n"
-	"";
+	"Sample usage: keygendemo pub_key master_key 4 1 0 1 1\n"
+	;
 
 /*
 	TODO ensure we don't give out the same attribute more than once (esp
@@ -93,12 +73,12 @@ int parse_args(int argc, char **argv)
 		}
 		else if (!pub_file)
 		{
-			printf("Setting public file\n");
+			// printf("Setting public file\n");
 			pub_file = argv[i];
 		}
 		else if (!msk_file)
 		{
-			printf("Setting master file\n");
+			// printf("Setting master file\n");
 			msk_file = argv[i];
 		}
 		else
@@ -131,17 +111,19 @@ int parse_args(int argc, char **argv)
 	// 	i++;
 	// }
 	ap = alist;
-	for(int i=0;i<n;i++){
-		
+	// int i;
+	// printf("i = %d n = %d\n", i, n);
+	for( i=0;i<n;i++){
+	
 		// DEBUG(__LINE__);	
 		attrs[i] = ap->data;
 		// printf("\nattrs[%d]= [%s] \n", i, attrs[i]);
 		ap = ap->next;
 	}
-
+		// printf("i = %d n = %d\n", i, n);
 	// DEBUG(__LINE__);
 	attrs[i] = 0;
-	DEBUG(__LINE__);
+	// DEBUG(__LINE__);
 	return n;
 }
 
@@ -155,8 +137,8 @@ int main(int argc, char **argv)
 	srand(time(NULL));
 	int n = parse_args(argc, argv);
 	t1 = clock();
-	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
 	msk = bswabe_msk_unserialize_new(suck_file(msk_file), 1);
+	pub = bswabe_pub_unserialize_new(suck_file(pub_file), 1);
 
 	int attributes[n];
 	for (int i = 0; i < n; i++)
@@ -167,7 +149,7 @@ int main(int argc, char **argv)
 
 	bswabe_keygen(&prv, pub, msk, attributes);
 
-	spit_file(out_file, bswabe_prv_serialize_new(prv), 1);
+	spit_file(out_file, bswabe_prv_serialize_new(prv, n), 1);
 	t2 = clock();
 
 	diff = ((double)(t2 - t1) / CLOCKS_PER_SEC);
